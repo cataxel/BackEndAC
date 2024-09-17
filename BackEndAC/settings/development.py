@@ -1,4 +1,4 @@
-from .__init__ import *
+from .base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -10,9 +10,9 @@ ALLOWED_HOSTS = []
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'your_dev_db_name',
-        'USER': 'your_dev_db_user',
-        'PASSWORD': 'your_dev_db_password',
+        'NAME': 'AC_DataBase',
+        'USER': 'admin',
+        'PASSWORD': 'admin123',
         'HOST': 'localhost',
         'PORT': '5432',
     }

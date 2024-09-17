@@ -1,8 +1,10 @@
+"""
 from django.urls import path
 from . import views
 
 # Definición de las rutas de la aplicación de usuarios
 urlpatterns = [
+
     # Ruta para el registro de usuarios
     path('register/', views.register, name='register'),
     # Ruta para el inicio de sesión
@@ -25,5 +27,7 @@ urlpatterns = [
     path('password_reset_confirm/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
     # Ruta que indica que el restablecimiento de la contraseña se ha completado
     path('password_reset_complete/', views.password_reset_complete, name='password_reset_complete'),
+
 ]
+"""
 
