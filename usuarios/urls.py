@@ -1,8 +1,13 @@
-"""
+
 from django.urls import path
 from . import views
 
 # Definición de las rutas de la aplicación de usuarios
+urlpatterns = [
+    path('test-db/', views.test_db_connection, name='test_db_connection'),
+]
+
+"""
 urlpatterns = [
 
     # Ruta para el registro de usuarios

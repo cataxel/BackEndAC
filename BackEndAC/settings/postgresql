@@ -1,2 +1,21 @@
 superuser password : admin123
 port : 5432
+
+create database : psql -U postgres -c "CREATE DATABASE db_systemac;"
+
+Usuarios:
+-- Crear usuarios
+-- Reemplaza 'contraseña' con la contraseña real del usuario
+CREATE USER Axel WITH PASSWORD 'Admin2022&';
+CREATE USER Ricardo WITH PASSWORD 'Admin2022&';
+CREATE USER Beto WITH PASSWORD 'Admin2022&';
+CREATE USER Jose WITH PASSWORD 'User2022&';
+CREATE USER Abby WITH PASSWORD 'Guest2022&';
+
+-- Asignar roles a los usuarios
+-- Reemplaza 'nombre_usuario' con el nombre real del usuario
+GRANT administrador TO Axel, Ricardo, Beto;
+GRANT usuario TO jose;
+GRANT invitado TO Abby;
+
+para modo development se tiene que usar alguno de los usuarios puestos arriba con el nombre del usuario en minusculas y la contraseña que se le asigno

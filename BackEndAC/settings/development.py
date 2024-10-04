@@ -10,9 +10,9 @@ ALLOWED_HOSTS = []
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'AC_DataBase',
-        'USER': 'admin',
-        'PASSWORD': 'admin123',
+        'NAME': 'db_systemac',
+        'USER': 'axel',
+        'PASSWORD': 'Admin2022&',
         'HOST': 'localhost',
         'PORT': '5432',
     }
