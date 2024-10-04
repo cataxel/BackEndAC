@@ -10,6 +10,7 @@ CREATE TABLE Roles (
     nombre VARCHAR(50) NOT NULL, -- Nombre del rol
     descripcion TEXT -- Descripción del rol
 );
+CREATE INDEX idx_roles_nombre ON Roles(nombre);
 
 -- Crear tabla de Usuarios
 DROP TABLE IF EXISTS Usuarios CASCADE;
@@ -21,6 +22,8 @@ CREATE TABLE Usuarios (
     contraseña VARCHAR(255) NOT NULL, -- Contraseña del usuario
     rol_id INTEGER REFERENCES Roles(id) ON DELETE SET NULL -- Referencia al rol del usuario
 );
+CREATE INDEX idx_usuarios_correo ON Usuarios(correo);
+CREATE INDEX idx_usuarios_rol_id ON Usuarios(rol_id);
 
 -- Crear tabla de Perfiles
 DROP TABLE IF EXISTS Perfiles CASCADE;
@@ -32,6 +35,7 @@ CREATE TABLE Perfiles (
     direccion TEXT, -- Dirección del usuario
     preferencias TEXT -- Preferencias del usuario
 );
+CREATE INDEX idx_perfiles_usuario_id ON Perfiles(usuario_id);
 
 -- Crear tabla de Sesiones
 DROP TABLE IF EXISTS Sesiones CASCADE;
@@ -42,6 +46,8 @@ CREATE TABLE Sesiones (
     fecha_inicio TIMESTAMP NOT NULL, -- Fecha y hora de inicio de la sesión
     fecha_fin TIMESTAMP -- Fecha y hora de fin de la sesión
 );
+CREATE INDEX idx_sesiones_usuario_id ON Sesiones(usuario_id);
+CREATE INDEX idx_sesiones_fecha_inicio ON Sesiones(fecha_inicio);
 
 -- Crear tabla de Actividades
 DROP TABLE IF EXISTS Actividades CASCADE;
@@ -54,6 +60,8 @@ CREATE TABLE Actividades (
     fecha_fin DATE NOT NULL, -- Fecha de fin de la actividad
     capacidad INTEGER NOT NULL -- Capacidad de la actividad
 );
+CREATE INDEX idx_actividades_nombre ON Actividades(nombre);
+CREATE INDEX idx_actividades_fecha_inicio ON Actividades(fecha_inicio);
 
 -- Crear tabla de Asistencia
 DROP TABLE IF EXISTS Asistencia CASCADE;
@@ -65,6 +73,9 @@ CREATE TABLE Asistencia (
     fecha_registro TIMESTAMP NOT NULL, -- Fecha y hora de registro de la asistencia
     estado VARCHAR(10) CHECK (estado IN ('presente', 'ausente')) -- Estado de la asistencia (presente o ausente)
 );
+CREATE INDEX idx_asistencia_usuario_id ON Asistencia(usuario_id);
+CREATE INDEX idx_asistencia_actividad_id ON Asistencia(actividad_id);
+CREATE INDEX idx_asistencia_fecha_registro ON Asistencia(fecha_registro);
 
 -- Crear tabla de Inscripciones
 DROP TABLE IF EXISTS Inscripciones CASCADE;
@@ -76,6 +87,9 @@ CREATE TABLE Inscripciones (
     fecha_inscripcion TIMESTAMP NOT NULL, -- Fecha y hora de inscripción
     estado VARCHAR(10) CHECK (estado IN ('inscrito', 'en espera')) -- Estado de la inscripción (inscrito o en espera)
 );
+CREATE INDEX idx_inscripciones_usuario_id ON Inscripciones(usuario_id);
+CREATE INDEX idx_inscripciones_actividad_id ON Inscripciones(actividad_id);
+CREATE INDEX idx_inscripciones_fecha_inscripcion ON Inscripciones(fecha_inscripcion);
 
 -- Crear tabla de Listas de Espera
 DROP TABLE IF EXISTS Listas_Espera CASCADE;
@@ -86,6 +100,9 @@ CREATE TABLE Listas_Espera (
     actividad_id INTEGER REFERENCES Actividades(id) ON DELETE CASCADE, -- Referencia a la actividad
     fecha_registro TIMESTAMP NOT NULL -- Fecha y hora de registro en la lista de espera
 );
+CREATE INDEX idx_listas_espera_usuario_id ON Listas_Espera(usuario_id);
+CREATE INDEX idx_listas_espera_actividad_id ON Listas_Espera(actividad_id);
+CREATE INDEX idx_listas_espera_fecha_registro ON Listas_Espera(fecha_registro);
 
 -- Crear tabla de Evaluaciones
 DROP TABLE IF EXISTS Evaluaciones CASCADE;
@@ -97,6 +114,9 @@ CREATE TABLE Evaluaciones (
     calificacion DECIMAL(2, 1) CHECK (calificacion >= 0 AND calificacion <= 5), -- Calificación de la actividad
     comentarios TEXT -- Comentarios sobre la actividad
 );
+CREATE INDEX idx_evaluaciones_usuario_id ON Evaluaciones(usuario_id);
+CREATE INDEX idx_evaluaciones_actividad_id ON Evaluaciones(actividad_id);
+CREATE INDEX idx_evaluaciones_calificacion ON Evaluaciones(calificacion);
 
 -- Crear tabla de Participaciones
 DROP TABLE IF EXISTS Participaciones CASCADE;
@@ -107,6 +127,9 @@ CREATE TABLE Participaciones (
     actividad_id INTEGER REFERENCES Actividades(id) ON DELETE CASCADE, -- Referencia a la actividad
     fecha_participacion TIMESTAMP NOT NULL -- Fecha y hora de participación
 );
+CREATE INDEX idx_participaciones_usuario_id ON Participaciones(usuario_id);
+CREATE INDEX idx_participaciones_actividad_id ON Participaciones(actividad_id);
+CREATE INDEX idx_participaciones_fecha_participacion ON Participaciones(fecha_participacion);
 
 -- Crear tabla de Notificaciones
 DROP TABLE IF EXISTS Notificaciones CASCADE;
@@ -118,6 +141,8 @@ CREATE TABLE Notificaciones (
     mensaje TEXT NOT NULL, -- Mensaje de la notificación
     fecha_envio TIMESTAMP NOT NULL -- Fecha y hora de envío de la notificación
 );
+CREATE INDEX idx_notificaciones_usuario_id ON Notificaciones(usuario_id);
+CREATE INDEX idx_notificaciones_fecha_envio ON Notificaciones(fecha_envio);
 
 -- Crear tabla de Anuncios
 DROP TABLE IF EXISTS Anuncios CASCADE;
@@ -129,6 +154,8 @@ CREATE TABLE Anuncios (
     contenido TEXT NOT NULL, -- Contenido del anuncio
     fecha_publicacion TIMESTAMP NOT NULL -- Fecha y hora de publicación del anuncio
 );
+CREATE INDEX idx_anuncios_administrador_id ON Anuncios(administrador_id);
+CREATE INDEX idx_anuncios_fecha_publicacion ON Anuncios(fecha_publicacion);
 
 -- Crear tabla de Sincronizaciones
 DROP TABLE IF EXISTS Sincronizaciones CASCADE;
@@ -139,6 +166,7 @@ CREATE TABLE Sincronizaciones (
     estado VARCHAR(50) NOT NULL, -- Estado de la sincronización
     detalles TEXT -- Detalles de la sincronización
 );
+CREATE INDEX idx_sincronizaciones_fecha ON Sincronizaciones(fecha);
 
 -- Crear tabla de Sistemas Externos
 DROP TABLE IF EXISTS Sistemas_Externos CASCADE;
@@ -148,6 +176,7 @@ CREATE TABLE Sistemas_Externos (
     nombre VARCHAR(100) NOT NULL, -- Nombre del sistema externo
     url VARCHAR(255) NOT NULL -- URL del sistema externo
 );
+CREATE INDEX idx_sistemas_externos_nombre ON Sistemas_Externos(nombre);
 
 -- Crear tabla de Reportes
 DROP TABLE IF EXISTS Reportes CASCADE;
@@ -159,6 +188,8 @@ CREATE TABLE Reportes (
     fecha_generacion TIMESTAMP NOT NULL, -- Fecha y hora de generación del reporte
     detalles TEXT -- Detalles del reporte
 );
+CREATE INDEX idx_reportes_administrador_id ON Reportes(administrador_id);
+CREATE INDEX idx_reportes_fecha_generacion ON Reportes(fecha_generacion);
 
 -- Crear tabla de Estadísticas
 DROP TABLE IF EXISTS Estadisticas CASCADE;
@@ -170,3 +201,6 @@ CREATE TABLE Estadisticas (
     numero_asistentes INTEGER NOT NULL, -- Número de asistentes a la actividad
     calificacion_promedio DECIMAL(2, 1) CHECK (calificacion_promedio >= 0 AND calificacion_promedio <= 5) -- Calificación promedio de la actividad
 );
+CREATE INDEX idx_estadisticas_actividad_id ON Estadisticas(actividad_id);
+CREATE INDEX idx_estadisticas_numero_inscritos ON Estadisticas(numero_inscritos);
+CREATE INDEX idx_estadisticas_numero_asistentes ON Estadisticas(numero_asistentes);
