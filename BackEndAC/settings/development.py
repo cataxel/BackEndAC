@@ -11,8 +11,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'db_systemac',
-        'USER': 'axel',
-        'PASSWORD': 'Admin2022&',
+        'USER': 'postgres',
+        'PASSWORD': 'admin123',
         'HOST': 'localhost',
         'PORT': '5432',
     }

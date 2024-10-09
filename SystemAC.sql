@@ -204,3 +204,5 @@ CREATE TABLE Estadisticas (
 CREATE INDEX idx_estadisticas_actividad_id ON Estadisticas(actividad_id);
 CREATE INDEX idx_estadisticas_numero_inscritos ON Estadisticas(numero_inscritos);
 CREATE INDEX idx_estadisticas_numero_asistentes ON Estadisticas(numero_asistentes);
+
+
