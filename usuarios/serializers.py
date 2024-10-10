@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 from rest_framework import serializers
 from .models import Usuario, Roles
 
@@ -29,55 +31,48 @@ def validate_correo(value):
     return value
 
 
+
+
 class UsuarioSerializer(serializers.ModelSerializer):
     """
     Serializador para el modelo Usuario.
     """
-    rol = serializers.SlugRelatedField(
-        queryset=Roles.objects.all(),
-        slug_field='nombre'
-    )
+    rol = serializers.UUIDField()
 
     class Meta:
         model = Usuario
         fields = ['nombre', 'correo', 'contraseña', 'rol']
+        extra_kwargs = {
+            'contraseña':  {'write_only': True, 'required': True}
+        }
 
     def create(self, validated_data):
         """
         Crea una nueva instancia de Usuario.
-
-        Args:
-            validated_data (dict): Los datos validados para crear el usuario.
-
-        Raises:
-            serializers.ValidationError: Si el correo ya está en uso.
-
-        Returns:
-            Usuario: La instancia de Usuario creada.
         """
-        rol_data = validated_data.pop('rol')
-        rol = Roles.objects.get(nombre=rol_data)
-        if Usuario.objects.filter(correo=validated_data.get('correo')).exists():
-            raise serializers.ValidationError('El correo ya está en uso')
-        usuario = Usuario.objects.create(rol=rol, **validated_data)
+        rol_guid= validated_data.pop('rol')
+        rol = Roles.objects.get(guid=rol_guid)
+        contrasena = validated_data.get('contraseña')
+        usuario = Usuario(**validated_data, rol=rol)
+        usuario.set_password(contrasena)
+        usuario.guid = uuid4()
+        usuario.save()
         return usuario
 
     def update(self, instance, validated_data):
         """
         Actualiza una instancia existente de Usuario.
-
-        Args:
-            instance (Usuario): La instancia de Usuario a actualizar.
-            validated_data (dict): Los datos validados para actualizar el usuario.
-
-        Returns:
-            Usuario: La instancia de Usuario actualizada.
         """
-        rol_data = validated_data.pop('rol')
-        rol = Roles.objects.get_or_create(**rol_data)[0]
-        instance.rol = rol
         instance.nombre = validated_data.get('nombre', instance.nombre)
         instance.correo = validated_data.get('correo', instance.correo)
-        instance.contraseña = validated_data.get('contraseña', instance.contraseña)
+
+        if 'contraseña' in validated_data:
+            contraseña = validated_data.pop('contraseña')
+            instance.set_password(contraseña)
+
+        if 'rol' in validated_data:
+            rol_guid = validated_data.pop('rol')
+            instance.rol = Roles.objects.get(guid=rol_guid)
+
         instance.save()
         return instance

@@ -1,9 +1,8 @@
 from django.contrib.auth.hashers import make_password, check_password
-from django.core.validators import RegexValidator, MinLengthValidator, EmailValidator
+from django.core.validators import EmailValidator
 from django.db import models
 import uuid
 
-from django.db.models.lookups import Regex
 from rest_framework.exceptions import ValidationError
 
 class Roles(models.Model):
@@ -73,7 +72,8 @@ class Usuario(models.Model):
     nombre = models.CharField(max_length=100)
     correo = models.CharField(unique=True, max_length=100)
     contraseña = models.CharField(max_length=255)
-    rol = models.ForeignKey(Roles, models.DO_NOTHING, blank=True, null=True)
+    rol = models.ForeignKey(Roles,to_field='id',on_delete=models.CASCADE)
+
 
     class Meta:
         indexes = [
@@ -108,7 +108,7 @@ class Usuario(models.Model):
         Args:
             raw_password (str): La contraseña en texto plano.
         """
-        self.contrasena = make_password(raw_password)
+        self.contraseña = make_password(raw_password)
 
     def check_password(self, raw_password: str) -> bool:
         """
@@ -120,7 +120,7 @@ class Usuario(models.Model):
         Returns:
             bool: True si la contraseña es correcta, False en caso contrario.
         """
-        return check_password(raw_password, self.contrasena)
+        return check_password(raw_password, self.contraseña)
 
     def rol_user(self) -> str:
         """
