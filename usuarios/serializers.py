@@ -76,3 +76,10 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+    def delete(self, instance):
+        """
+        Elimina una instancia existente de Usuario.
+        """
+        instance.delete()
+        return {"mensaje": "Usuario eliminado exitosamente"}
