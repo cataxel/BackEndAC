@@ -28,6 +28,7 @@ class Roles(models.Model):
         ordering = ['nombre']
         managed = False
         db_table = 'roles'
+        app_label = 'usuarios'
 
     def save(self, *args, **kwargs):
         """
@@ -85,6 +86,7 @@ class Usuario(models.Model):
         verbose_name_plural = 'Usuarios'
         managed = False
         db_table = 'usuarios'
+        app_label = 'usuarios'
 
     def __str__(self):
         return self.nombre
@@ -137,6 +139,10 @@ class Usuario(models.Model):
         """
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+
+        super().delete(*args, **kwargs)  # Llama al metodo delete de la clase padre
 
     @classmethod
     def find_by_role(cls, role_name: str):
