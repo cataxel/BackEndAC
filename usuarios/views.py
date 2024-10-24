@@ -39,6 +39,19 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         """
         Maneja la creación de un nuevo usuario.
         """
+        # Obtén el correo del request
+        correo = request.data.get('correo')
+
+        # Verifica si el correo tiene un formato válido
+        if correo and not self.validar_correo(correo):
+            return APIRespuesta(
+                estado=False,
+                mensaje='El correo debe ser válido.',
+                data=None,
+                codigoestado=status.HTTP_400_BAD_REQUEST
+            ).to_response()
+
+        # Procede con la creación del usuario si el correo es válido
         serializer = self.get_serializer(data=request.data)
 
         if serializer.is_valid():
@@ -58,6 +71,55 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         response = APIRespuesta(
             estado=False,
             mensaje="Error al crear el usuario.",
+            data=serializer.errors,
+            codigoestado=status.HTTP_400_BAD_REQUEST
+        )
+        return response.to_response()
+
+    def validar_correo(self, correo):
+        """
+        Valida que el correo tenga el formato correcto.
+        """
+        import re
+        # Expresión regular para validar un correo electrónico genérico
+        patron = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+        return re.match(patron, correo)
+
+    def update(self, request, *args, **kwargs):
+        """
+        Maneja la actualización de un usuario existente.
+        """
+        instance = self.get_object()  # Obtiene el usuario a actualizar
+
+        if isinstance(instance, Response):
+            return instance  # Si instance es una respuesta, devuélvela directamente
+
+        # Obtiene los datos de la solicitud
+        nuevo_correo = request.data.get('correo', instance.correo)
+        if nuevo_correo and not self.validar_correo(nuevo_correo):
+            return APIRespuesta(
+                estado=False,
+                mensaje='El correo debe ser valido',
+                data=None,
+                codigoestado=status.HTTP_400_BAD_REQUEST
+            ).to_response()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            usuario = serializer.save()
+            response = APIRespuesta(
+                estado=True,
+                mensaje='Usuario actualizado exitosamente.',
+                data=serializer.data,
+                codigoestado=status.HTTP_200_OK
+            )
+            return response.to_response()
+
+        # Si hay errores de validación
+        response = APIRespuesta(
+            estado=False,
+            mensaje='Error al actualizar el usuario.',
             data=serializer.errors,
             codigoestado=status.HTTP_400_BAD_REQUEST
         )
