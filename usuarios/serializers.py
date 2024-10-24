@@ -1,7 +1,8 @@
 from uuid import uuid4
 
 from rest_framework import serializers
-from .models import Usuario, Roles
+from .models import Usuario, Roles, Perfil
+
 
 class RolesSerializer(serializers.ModelSerializer):
     """
@@ -83,3 +84,77 @@ class UsuarioSerializer(serializers.ModelSerializer):
         """
         instance.delete()
         return {"mensaje": "Usuario eliminado exitosamente"}
+
+
+class PerfilSerializer(serializers.ModelSerializer):
+    """
+    Serializador para el modelo Perfiles.
+    """
+    usuario = serializers.UUIDField()
+
+    class Meta:
+        model = Perfil
+        fields = ['usuario','telefono','direccion','carrera','numero_control']
+
+    def create(self, validated_data):
+        usuario_guid = validated_data.pop('usuario')
+        # Buscamos el usuario asociado
+        try:
+            usuario = Usuario.objects.get(guid=usuario_guid)
+        except Usuario.DoesNotExist:
+            raise serializers.ValidationError("Usuario no encontrado.")
+
+        # Verificar si el usuario ya tiene un perfil
+        if Perfil.objects.filter(usuario=usuario).exists():
+            raise serializers.ValidationError("El usuario ya tiene un perfil asociado.")
+        perfil = Perfil(**validated_data, usuario=usuario)
+        perfil.guid = uuid4()
+        perfil.save()
+        return perfil
+
+    def update(self, instance, validated_data):
+        usuario_guid = validated_data.pop('usuario', None)
+
+        # Verificar si se proporciona un nuevo usuario y actualizarlo
+        if usuario_guid and instance.usuario.guid != usuario_guid:
+            try:
+                usuario = Usuario.objects.get(guid=usuario_guid)
+
+                # Verificar que el nuevo usuario no tenga ya un perfil
+                if Perfil.objects.filter(usuario=usuario).exists():
+                    raise serializers.ValidationError("El nuevo usuario ya tiene un perfil asociado.")
+
+                instance.usuario = usuario
+            except Usuario.DoesNotExist:
+                raise serializers.ValidationError("Usuario no encontrado.")
+
+        # Actualizar el teléfono utilizando el metodo del modelo
+        nuevo_telefono = validated_data.get('telefono')
+        if nuevo_telefono:
+            instance.actualizar_telefono(nuevo_telefono)
+
+        # Actualizar la dirección si se proporciona
+        instance.direccion = validated_data.get('direccion', instance.direccion)
+
+        # Actualizar la carrera y validar si está asignada
+        nueva_carrera = validated_data.get('carrera')
+        if nueva_carrera:
+            instance.carrera = nueva_carrera
+            if not instance.tiene_carrera():
+                raise serializers.ValidationError("Debe asignarse una carrera válida.")
+
+        # Actualizar el número de control si se proporciona
+        numero_control = validated_data.get('numero_control')
+        if numero_control:
+            instance.numero_control = numero_control
+
+        # Guardar la instancia actualizada
+        instance.save()
+        return instance
+
+    def delete(self, instance):
+        instance.delete()
+        return {"mensaje": "datos de perfil eliminado exitosamente"}
+
+
+

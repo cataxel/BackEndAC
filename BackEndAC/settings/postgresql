@@ -19,3 +19,5 @@ GRANT usuario TO jose;
 GRANT invitado TO Abby;
 
 para modo development se tiene que usar alguno de los usuarios puestos arriba con el nombre del usuario en minusculas y la contraseña que se le asigno
+
+

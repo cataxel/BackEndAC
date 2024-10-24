@@ -1,6 +1,17 @@
 /*
  Database: db_systemac
  */
+-- Crear la base de datos con codificación UTF-8
+CREATE DATABASE db_systemac
+    WITH
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'en_US.UTF-8'
+    LC_CTYPE = 'en_US.UTF-8'
+    TEMPLATE = template0;
+
+-- Usar la base de datos creada
+\c db_systemac;
+
 
 -- Crear tabla de Roles
 DROP TABLE IF EXISTS Roles CASCADE;
@@ -33,9 +44,11 @@ CREATE TABLE Perfiles (
     usuario_id INTEGER REFERENCES Usuarios(id) ON DELETE CASCADE, -- Referencia al usuario
     telefono VARCHAR(15), -- Teléfono del usuario
     direccion TEXT, -- Dirección del usuario
-    preferencias TEXT -- Preferencias del usuario
+    carrera TEXT, -- Carrera del perfil si aplica
+    numero_control int -- numero control del perfil
 );
 CREATE INDEX idx_perfiles_usuario_id ON Perfiles(usuario_id);
+CREATE INDEX inx_perfiles_numero_control ON Perfiles(numero_control);
 
 -- Crear tabla de Sesiones
 DROP TABLE IF EXISTS Sesiones CASCADE;

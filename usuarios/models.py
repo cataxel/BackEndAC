@@ -127,7 +127,6 @@ class Usuario(models.Model):
     def rol_user(self) -> str:
         """
         Obtiene el nombre del rol del usuario.
-
         Returns:
             str: Nombre del rol del usuario.
         """
@@ -141,7 +140,6 @@ class Usuario(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-
         super().delete(*args, **kwargs)  # Llama al metodo delete de la clase padre
 
     @classmethod
@@ -192,3 +190,57 @@ class Usuario(models.Model):
             QuerySet: Conjunto de todos los usuarios.
         """
         return cls.objects.all()
+
+class Perfil(models.Model):
+    guid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)  # GUID único
+    usuario = models.ForeignKey(
+        'Usuario', to_field='id', on_delete=models.CASCADE, db_column='usuario_id'
+    )  # Relación con la tabla Usuarios
+    telefono = models.CharField(max_length=15, blank=True, null=True)  # Teléfono opcional
+    direccion = models.TextField(blank=True, null=True)  # Dirección opcional
+    carrera = models.TextField(blank=True, null=True)  # Carrera opcional
+    numero_control = models.IntegerField(unique=True)  # Número de control único
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['usuario']),  # Índice sobre usuario_id
+            models.Index(fields=['numero_control']),  # Índice sobre numero_control
+        ]
+        ordering = ['usuario']
+        verbose_name = 'Perfil'
+        verbose_name_plural = 'Perfiles'
+        managed = False  # Para indicar que la tabla ya está creada en la BD
+        db_table = 'perfiles'  # Nombre de la tabla en la base de datos
+        app_label = 'usuarios'
+
+    def __str__(self):
+        """Representación en texto del objeto Perfil."""
+        return f'Perfil: {self.usuario} (Control: {self.numero_control})'
+
+    # Metodo para actualizar el teléfono
+    def actualizar_telefono(self, nuevo_telefono):
+        """Actualiza el teléfono del perfil."""
+        self.telefono = nuevo_telefono
+        self.save()
+
+    # Metodo para validar si tiene carrera asignada
+    def tiene_carrera(self):
+        """Devuelve True si el perfil tiene carrera asignada."""
+        return bool(self.carrera)
+
+    # Metodo para obtener dirección abreviada
+    def direccion_abreviada(self):
+        """Devuelve los primeros 30 caracteres de la dirección."""
+        return self.direccion[:30] + '...' if self.direccion and len(self.direccion) > 30 else self.direccion
+
+    # Metodo de búsqueda por número de control (classmethod)
+    @classmethod
+    def buscar_por_numero_control(cls, numero_control):
+        """Busca un perfil por su número de control."""
+        return cls.objects.filter(numero_control=numero_control).first()
+
+    # Metodo para borrar el perfil
+    def eliminar_perfil(self):
+        """Elimina el perfil actual."""
+        self.delete()
+
