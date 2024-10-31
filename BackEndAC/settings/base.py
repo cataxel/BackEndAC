@@ -65,9 +65,22 @@ TEMPLATES = [
 ]
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Cambia el valor a lo que prefieras
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Cambia el valor a lo que prefieras
+    'ROTATE_REFRESH_TOKENS': False,  # Opcional: Si es True, se generará un nuevo refresh token en cada solicitud de renovación
+    'BLACKLIST_AFTER_ROTATION': True,  # Opcional: Si es True, el token de refresco anterior se invalidará
+}
+
 
 WSGI_APPLICATION = 'BackEndAC.wsgi.application'
 

@@ -243,3 +243,53 @@ class PerfilViewSet(viewsets.ModelViewSet):
         )
         return response.to_response()
 
+
+# views.py
+from rest_framework import viewsets
+from rest_framework.response import Response
+from rest_framework import status
+from django.contrib.auth.hashers import check_password
+from rest_framework_simplejwt.tokens import RefreshToken
+from usuarios.models import Usuario
+from pymongo import MongoClient
+
+
+class LoginViewSet(viewsets.ViewSet):
+    def create(self, request):
+        correo = request.data.get('correo')
+        contraseña = request.data.get('contraseña')
+
+        try:
+            # Buscar al usuario por correo
+            user = Usuario.objects.get(correo=correo)
+
+            # Verificar la contraseña
+            if check_password(contraseña, user.contraseña):
+                refresh = RefreshToken.for_user(user)
+
+                # Conectar a MongoDB
+                client = MongoClient(
+                    "mongodb+srv://beto:FEyR64Tyj1VFXo5I@sessions.byekg.mongodb.net/?retryWrites=true&w=majority&appName=Sessions")
+                db = client["Sessions"]  # Nombre de la base de datos
+                tokens_collection = db["tokens"]  # Nombre de la colección
+
+                # Guardar el token en la colección
+                token_data = {
+                    'user_id': user.id,
+                    'refresh_token': str(refresh),
+                    'access_token': str(refresh.access_token)
+                }
+                tokens_collection.insert_one(token_data)
+
+                # Cerrar conexión con MongoDB
+                client.close()
+
+                return Response({
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({'detail': 'Contraseña incorrecta.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        except Usuario.DoesNotExist:
+            return Response({'detail': 'El usuario no existe.'}, status=status.HTTP_404_NOT_FOUND)
