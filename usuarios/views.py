@@ -275,7 +275,7 @@ class LoginViewSet(viewsets.ViewSet):
 
                 # Guardar el token en la colección
                 token_data = {
-                    'user_id': user.id,
+                    'user_guid': str(user.guid),
                     'refresh_token': str(refresh),
                     'access_token': str(refresh.access_token)
                 }
@@ -285,6 +285,7 @@ class LoginViewSet(viewsets.ViewSet):
                 client.close()
 
                 return Response({
+                    'user_guid': str(user.guid),
                     'refresh': str(refresh),
                     'access': str(refresh.access_token),
                 }, status=status.HTTP_200_OK)
