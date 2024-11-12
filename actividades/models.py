@@ -21,6 +21,7 @@ class Actividad(models.Model):
     descripcion = models.TextField(blank=True, null=True)
     fecha_inicio = models.DateTimeField()
     fecha_fin = models.DateTimeField()
+    capacidad = models.IntegerField()
 
     class Meta:
         verbose_name = 'Actividad'
