@@ -19,8 +19,8 @@ class Actividad(models.Model):
     guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True, null=True)
-    fecha_inicio = models.DateTimeField()
-    fecha_fin = models.DateTimeField()
+    fecha_inicio = models.DateField()
+    fecha_fin = models.DateField()
     capacidad = models.IntegerField()
 
     class Meta:

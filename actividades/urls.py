@@ -1,10 +1,12 @@
-from django.urls import path
-from .views import ActividadCreateView, ActividadDeleteView, ActividadUpdateView, ActividadDetailView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+
+from actividades.views import ActividadViewSet
+
+router = DefaultRouter()
+router.register(r'actividades', ActividadViewSet)
 
 urlpatterns = [
-    path('', ActividadCreateView.as_view(), name='actividad-create'),
-    path('delete/<uuid:guid>/', ActividadDeleteView.as_view(), name='actividad-delete'),
-    path('update/<uuid:guid>/', ActividadUpdateView.as_view(), name='actividad-update'),
-    path('detalle/<uuid:guid>/', ActividadDetailView.as_view(), name='actividad-detail'),
+    path('', include(router.urls)),
 
 ]

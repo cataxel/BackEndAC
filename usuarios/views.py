@@ -1,8 +1,17 @@
+from django.contrib.auth.hashers import check_password
+from django.core.serializers import serialize
 from django.http import Http404
 from rest_framework import viewsets, status
+from rest_framework.decorators import permission_classes
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from BackEndAC.publics.Generics.Respuesta import APIRespuesta
+from BackEndAC.publics.Utils.Auto import RolePermission
+from BackEndAC.publics.Utils.mongodb_client import MongoDBClient
 from usuarios.models import Roles, Usuario, Perfil
 from usuarios.serializers import RolesSerializer, UsuarioSerializer, PerfilSerializer
 
@@ -25,15 +34,25 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         try:
             return Usuario.objects.get(guid=guid)  # Busca el usuario por su GUID
         except Usuario.DoesNotExist:
-            # En lugar de lanzar una excepción, devolvemos una respuesta APIRespuesta
+            # Devuelve una respuesta en lugar de pasar al serializador
             response = APIRespuesta(
                 estado=False,
                 mensaje="El usuario no existe.",
                 data=None,
                 codigoestado=status.HTTP_404_NOT_FOUND
             )
-            # Devuelve la respuesta en un formato apropiado
             return response.to_response()
+
+    def retrieve(self, request, *args, **kwargs):
+        usuario = self.get_object()
+
+        # Si `get_object` devuelve una respuesta (error), regresarla inmediatamente
+        if isinstance(usuario, Response):
+            return usuario
+
+        # Si el usuario existe, procede a serializarlo
+        serializer = UsuarioSerializer(usuario)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         """
@@ -129,13 +148,8 @@ class UsuarioViewSet(viewsets.ModelViewSet):
         """
         Maneja la eliminación de un usuario por su GUID.
         """
-        instance = self.get_object()  # Intenta obtener el objeto (usuario)
-
-        if isinstance(instance, Response):
-            return instance  # Si instance es una respuesta, devuélvela directamente
-
-        # Elimina la instancia
-        self.perform_destroy(instance)
+        user = self.get_object()
+        user.delete()
 
         # Crear respuesta de éxito
         response = APIRespuesta(
@@ -244,16 +258,6 @@ class PerfilViewSet(viewsets.ModelViewSet):
         return response.to_response()
 
 
-# views.py
-from rest_framework import viewsets
-from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth.hashers import check_password
-from rest_framework_simplejwt.tokens import RefreshToken
-from usuarios.models import Usuario
-from pymongo import MongoClient
-
-
 class LoginViewSet(viewsets.ViewSet):
     def create(self, request):
         correo = request.data.get('correo')
@@ -265,32 +269,96 @@ class LoginViewSet(viewsets.ViewSet):
 
             # Verificar la contraseña
             if check_password(contraseña, user.contraseña):
+                # Generar los tokens manualmente
                 refresh = RefreshToken.for_user(user)
+                access_token = refresh.access_token
 
-                # Conectar a MongoDB
-                client = MongoClient(
-                    "mongodb+srv://beto:FEyR64Tyj1VFXo5I@sessions.byekg.mongodb.net/?retryWrites=true&w=majority&appName=Sessions")
-                db = client["Sessions"]  # Nombre de la base de datos
-                tokens_collection = db["tokens"]  # Nombre de la colección
+                # Agregar el rol al token (puedes agregar más campos si lo necesitas)
+                access_token['rol'] = str(user.rol.guid)
 
-                # Guardar el token en la colección
+                # Guardar el token en MongoDB
+                mongo_client = MongoDBClient(db_name="Sessions")
+                mongo_client.connect()
+                tokens_collection = mongo_client.get_collection("tokens")
+
                 token_data = {
                     'user_guid': str(user.guid),
                     'refresh_token': str(refresh),
-                    'access_token': str(refresh.access_token)
+                    'access_token': str(access_token)
                 }
                 tokens_collection.insert_one(token_data)
+                mongo_client.close()
 
-                # Cerrar conexión con MongoDB
-                client.close()
+                # Responder con los tokens
+                response = APIRespuesta(
+                    estado=True,
+                    mensaje="Inicio de sesión exitoso.",
+                    data={
+                        'user_guid': str(user.guid),
+                        'refresh': str(refresh),
+                        'access': str(access_token)
+                    },
+                    codigoestado=status.HTTP_200_OK
+                )
+                return response.to_response()
 
-                return Response({
-                    'user_guid': str(user.guid),
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                }, status=status.HTTP_200_OK)
             else:
-                return Response({'detail': 'Contraseña incorrecta.'}, status=status.HTTP_401_UNAUTHORIZED)
+                # Contraseña incorrecta
+                response = APIRespuesta(
+                    estado=False,
+                    mensaje="Contraseña incorrecta.",
+                    codigoestado=status.HTTP_401_UNAUTHORIZED
+                )
+                return response.to_response()
 
         except Usuario.DoesNotExist:
-            return Response({'detail': 'El usuario no existe.'}, status=status.HTTP_404_NOT_FOUND)
+            # Usuario no existe
+            response = APIRespuesta(
+                estado=False,
+                mensaje="El usuario no existe.",
+                codigoestado=status.HTTP_404_NOT_FOUND
+            )
+            return response.to_response()
+
+
+class LogoutViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request):
+        # Obtener el token JWT de los encabezados
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            raise PermissionDenied("No se proporcionó un token de autenticación.")
+
+        # El token generalmente se pasa en el formato "Bearer <token>"
+        token = auth_header.split(" ")[1]
+
+        # Usar JWTAuthentication para verificar y decodificar el token
+        jwt_authenticator = JWTAuthentication()
+        try:
+            # Verificar y decodificar el token para obtener al usuario
+            user, _ = jwt_authenticator.authenticate(request)
+        except Exception as e:
+            raise PermissionDenied(f"Autenticación fallida: {str(e)}")
+
+        # Aquí puedes hacer lo que desees con el token, como revocar o eliminar el token guardado
+        # En este caso, eliminamos el token de MongoDB (si lo estás almacenando)
+        mongo_client = MongoDBClient(db_name="Sessions")
+        mongo_client.connect()
+
+        print(user)
+        tokens_collection = mongo_client.get_collection("tokens")
+
+        # Verifica si el user_guid está disponible
+        if not user or not hasattr(user, 'guid'):
+            raise PermissionDenied("No se pudo encontrar el usuario para hacer logout.")
+
+        # Eliminar el token de MongoDB por el user_guid
+        tokens_collection.delete_many({'user_guid': str(user.guid)})
+        mongo_client.close()
+
+        # Responder con un mensaje de éxito
+        return Response({
+            "estado": True,
+            "mensaje": "Logout exitoso. El token ha sido revocado.",
+        }, status=200)

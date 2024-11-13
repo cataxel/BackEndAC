@@ -1,6 +1,9 @@
 from uuid import uuid4
 
+from django.contrib.auth.hashers import check_password
 from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 from .models import Usuario, Roles, Perfil
 
 
@@ -42,7 +45,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Usuario
-        fields = ['nombre', 'correo', 'contraseña', 'rol']
+        fields = ['guid','nombre', 'correo', 'contraseña', 'rol']
         extra_kwargs = {
             'contraseña':  {'write_only': True, 'required': True}
         }
@@ -155,6 +158,5 @@ class PerfilSerializer(serializers.ModelSerializer):
     def delete(self, instance):
         instance.delete()
         return {"mensaje": "datos de perfil eliminado exitosamente"}
-
 
 
