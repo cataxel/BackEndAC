@@ -42,6 +42,7 @@ class UsuarioSerializer(serializers.ModelSerializer):
     Serializador para el modelo Usuario.
     """
     rol = serializers.UUIDField()
+    guid = serializers.UUIDField(required=False, read_only=True)
 
     class Meta:
         model = Usuario

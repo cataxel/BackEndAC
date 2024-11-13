@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'usuarios',
+    'actividades',
+    'evaluacion'
 ]
 
 # Quick-start development settings - unsuitable for production
