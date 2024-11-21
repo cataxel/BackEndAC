@@ -5,9 +5,8 @@ from .base import *
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://backendac-w661.onrender.com']
+ALLOWED_HOSTS = ['backendac-w661.onrender.com']
 
-PORT = os.getenv('PORT', '8000')
 
 env = environ.Env()
 environ.Env.read_env()
