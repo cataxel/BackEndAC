@@ -1,11 +1,11 @@
-from os import environ
+import environ
 
 from .base import *
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['backendac.herokuapp.com']
+ALLOWED_HOSTS = ['https://backendac-w661.onrender.com']
 
 env = environ.Env()
 environ.Env.read_env()

@@ -14,7 +14,7 @@ class RolesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Roles
-        fields = ['nombre']
+        fields = ['guid','nombre','descripcion']
 
 
 def validate_correo(value):
