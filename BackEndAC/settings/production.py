@@ -7,9 +7,10 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['backendac-w661.onrender.com']
 
-
 env = environ.Env()
 environ.Env.read_env()
+
+PORT = env('PORT')
 
 # Database
 DATABASES = {
