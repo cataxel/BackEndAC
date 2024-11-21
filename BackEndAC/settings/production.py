@@ -7,6 +7,8 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['https://backendac-w661.onrender.com']
 
+PORT = os.getenv('PORT', '8000')
+
 env = environ.Env()
 environ.Env.read_env()
 
