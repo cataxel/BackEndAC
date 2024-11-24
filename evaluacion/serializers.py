@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 
 from actividades.models import Actividad
 from usuarios.models import Usuario
-from .models import Evaluacion
+from .models import Evaluacion, ListaEspera
 import uuid
 
 class EvaluacionSerializer(serializers.ModelSerializer):
@@ -64,3 +64,31 @@ class EvaluacionSerializer(serializers.ModelSerializer):
         # Guardamos la instancia actualizada
         instance.save()
         return instance
+
+class ListaEsperaSerializer(serializers.ModelSerializer):
+    guid = serializers.UUIDField(default=uuid.uuid4(), read_only=True)
+    usuario_id = serializers.UUIDField(source='usuario.guid')
+    actividad_id = serializers.UUIDField(source='actividad.guid')
+    fecha_registro = serializers.DateField()
+
+    class Meta:
+        model = ListaEspera
+        fields = ['guid', 'usuario_id', 'actividad_id', 'fecha_registro']
+
+    def create(self, validated_data):
+        usuario_guid = validated_data.pop('usuario')
+        actividad_guid = validated_data.pop('actividad')
+
+        try:
+            usuario = ListaEspera.find_by_user(user_guid=usuario_guid)
+            actividad = ListaEspera.find_by_activity(activity_guid=actividad_guid)
+        except Usuario.DoesNotExist:
+            raise ValidationError(f"No se encontro el usuario con GUID {usuario_guid}")
+        except Actividad.DoesNotExist:
+            raise ValidationError(f"No se encontro la actividad con GUID {actividad_guid}")
+
+        lista_espera = ListaEspera(**validated_data,usuario=usuario,actividad=actividad)
+        lista_espera.guid = uuid.uuid4()
+        #lista_espera.fecha_registro = validated_data.get('fecha_registro')
+        lista_espera.save()
+        return lista_espera

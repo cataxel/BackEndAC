@@ -188,7 +188,7 @@ CREATE TABLE Sistemas_Externos (
     guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Sistemas Externos
     nombre VARCHAR(100) NOT NULL, -- Nombre del sistema externo
     url VARCHAR(255) NOT NULL -- URL del sistema externo
-);
+);      
 CREATE INDEX idx_sistemas_externos_nombre ON Sistemas_Externos(nombre);
 
 -- Crear tabla de Reportes

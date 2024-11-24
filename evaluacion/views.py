@@ -2,8 +2,8 @@ from django.shortcuts import render
 from rest_framework import viewsets, status
 
 from BackEndAC.publics.Generics.Respuesta import APIRespuesta
-from evaluacion.models import Evaluacion
-from evaluacion.serializers import EvaluacionSerializer
+from evaluacion.models import Evaluacion, ListaEspera
+from evaluacion.serializers import EvaluacionSerializer, ListaEsperaSerializer
 
 
 class EvaluacionViewSet(viewsets.ModelViewSet):
@@ -130,4 +130,34 @@ class EvaluacionViewSet(viewsets.ModelViewSet):
                 mensaje=f"Error inesperado",
                 data=str(e),
                 codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
+            ).to_response()
+
+class ListaEsperaViewSet(viewsets.ModelViewSet):
+    queryset = ListaEspera.objects.all()
+    serializer_class = ListaEsperaSerializer
+    lookup_field = 'guid'
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = ListaEsperaSerializer(data=request.data)
+            if serializer.is_valid():
+                return APIRespuesta(
+                    estado = True,
+                    mensaje = "Registro en lista de espera exitoso",
+                    data = serializer.data,
+                    codigoestado = status.HTTP_201_CREATED
+                ).to_response()
+            else:
+                return APIRespuesta(
+                    estado = False,
+                    mensaje="Error al crear registro en lista de espera",
+                    data=serializer.errors,
+                    codigoestado=status.HTTP_400_BAD_REQUEST
+                ).to_response()
+        except Exception as e:
+            return APIRespuesta(
+                estado = False,
+                mensaje = f"Error inesperado",
+                data = str(e),
+                codigoestado = status.HTTP_500_INTERNAL_SERVER_ERROR
             ).to_response()

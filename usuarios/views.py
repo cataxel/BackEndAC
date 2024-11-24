@@ -43,16 +43,23 @@ class UsuarioViewSet(viewsets.ModelViewSet):
             )
             return response.to_response()
 
-    def retrieve(self, request, *args, **kwargs):
-        usuario = self.get_object()
-
-        # Si `get_object` devuelve una respuesta (error), regresarla inmediatamente
-        if isinstance(usuario, Response):
-            return usuario
-
-        # Si el usuario existe, procede a serializarlo
-        serializer = UsuarioSerializer(usuario)
-        return Response(serializer.data)
+    def retrieve(self, request,*args, **kwargs):
+        try:
+            usuario = self.get_object()
+            serializer = UsuarioSerializer(usuario)
+            return APIRespuesta(
+                estado= True,
+                mensaje="Usuario obtenido exitosamente",
+                data=serializer.data,
+                codigoestado=status.HTTP_200_OK
+            ).to_response()
+        except Usuario.DoesNotExist:
+            return APIRespuesta(
+                estado=False,
+                mensaje="El usuario no existe.",
+                data=None,
+                codigoestado=status.HTTP_404_NOT_FOUND
+            )
 
     def create(self, request, *args, **kwargs):
         """

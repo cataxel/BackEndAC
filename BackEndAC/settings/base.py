@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +31,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'usuarios',
     'actividades',
-    'evaluacion'
+    'evaluacion',
+    'integracion'
 ]
 
 # Quick-start development settings - unsuitable for production
@@ -126,3 +130,12 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Configuración de Cloudinary
+cloudinary.config(
+    cloud_name="do5pjsoef",  # Reemplaza con tu CLOUDNAME
+    api_key="378119892223313",  # Reemplaza con tu APIKEY
+    api_secret="Y7rCrUtqWnLu08y04_Kno6N-KJA",  # Reemplaza con tu APISECRET
+)
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
