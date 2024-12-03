@@ -156,13 +156,27 @@ class InscripcionViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         try:
-
+            # Obtener los datos del request
             serializer = self.get_serializer(data=request.data)
             if serializer.is_valid():
+                # Extraer los datos necesarios para validar duplicados
+                usuario = serializer.validated_data.get('usuario')
+                actividad = serializer.validated_data.get('actividad')
+
+                # Verificar si ya existe una inscripción con los mismos datos
+                if Inscripcion.objects.filter(usuario=usuario, actividad=actividad).exists():
+                    return APIRespuesta(
+                        estado=False,
+                        mensaje='Ya existe una inscripción para este usuario en este evento',
+                        data={},
+                        codigoestado=status.HTTP_400_BAD_REQUEST
+                    ).to_response()
+
+                # Si no hay duplicados, guardar la inscripción
                 serializer.save()
                 return APIRespuesta(
                     estado=True,
-                    mensaje='Inscripcion guardada',
+                    mensaje='Inscripción guardada',
                     data=serializer.data,
                     codigoestado=status.HTTP_200_OK
                 ).to_response()
@@ -183,18 +197,35 @@ class InscripcionViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         try:
-            # Obtener la inscripcion a actualizar
+            # Obtener la inscripción a actualizar
             inscripcion = self.get_object()
 
-            # Crear el serializer con la instancia de inscripcion y los datos del request
+            # Crear el serializer con la instancia actual y los datos del request
             serializer = self.get_serializer(inscripcion, data=request.data)
 
-            # Validar y guardar los cambios
+            # Validar los datos
             if serializer.is_valid():
+                # Extraer los datos necesarios para validar duplicados
+                usuario = serializer.validated_data.get('usuario')
+                actividad = serializer.validated_data.get('actividad')
+
+                # Verificar si ya existe otra inscripción con los mismos datos
+                if Inscripcion.objects.filter(
+                        usuario=usuario,
+                        actividad=actividad
+                ).exclude(id=inscripcion.id).exists():
+                    return APIRespuesta(
+                        estado=False,
+                        mensaje='Ya existe otra inscripción para este usuario en este evento',
+                        data={},
+                        codigoestado=status.HTTP_400_BAD_REQUEST
+                    ).to_response()
+
+                # Si no hay duplicados, guardar los cambios
                 serializer.save()
                 return APIRespuesta(
                     estado=True,
-                    mensaje='Inscripcion actualizada',
+                    mensaje='Inscripción actualizada',
                     data=serializer.data,
                     codigoestado=status.HTTP_200_OK
                 ).to_response()
@@ -208,7 +239,7 @@ class InscripcionViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return APIRespuesta(
                 estado=False,
-                mensaje=f'Error inesperado',
+                mensaje='Error inesperado',
                 data=str(e),
                 codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
             ).to_response()
