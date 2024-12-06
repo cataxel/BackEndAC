@@ -1,5 +1,7 @@
 import cloudinary
 import cloudinary.api
+from cloudinary import uploader
+from rest_framework.parsers import MultiPartParser
 from rest_framework.views import APIView
 from rest_framework import status
 
@@ -9,10 +11,11 @@ from integracion.serializers import CloudinaryImageSerializer
 
 
 class CloudinaryImageView(APIView):
+    parser_class = [MultiPartParser]
     def get(self, request, *args, **kwargs):
         try:
             # Fetch resources from Cloudinary
-            cloudinary_response = cloudinary.api.resources(type="upload", resource_type="image")
+            cloudinary_response = cloudinary.api.resources(type="upload", resource_type="image",prefix="LoginImages")
 
             # Parse response to match the schema of CloudinaryImage
             images = [
@@ -40,4 +43,28 @@ class CloudinaryImageView(APIView):
                 mensaje="Error al obtener las imágenes",
                 data=str(e),
                 codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
+            ).to_response()
+
+    def post(self, request, *args, **kwargs):
+        try:
+            file = request.FILES.get('file')
+            if not file:
+                return APIRespuesta(
+                    estado = False,
+                    mensaje= "error: No se proporciono un archivo.",
+                    data=""
+                ).to_response()
+
+            upload_result = cloudinary.uploader.upload(file,folder='Profile')
+            return APIRespuesta(
+                estado=True,
+                mensaje="imagen: " + file.name,
+                data=upload_result
+            ).to_response()
+        except Exception as e:
+            cloudinary.logger.error("Error while fetching images from Cloudinary: %s", str(e))
+            return APIRespuesta(
+                estado=False,
+                mensaje="Error al subir imagenes",
+                data=str(e)
             ).to_response()

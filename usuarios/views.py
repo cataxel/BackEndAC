@@ -1,8 +1,6 @@
 from django.contrib.auth.hashers import check_password
-from django.core.serializers import serialize
 from django.http import Http404
 from rest_framework import viewsets, status
-from rest_framework.decorators import permission_classes
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,6 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from BackEndAC.publics.Generics.Respuesta import APIRespuesta
 from BackEndAC.publics.Utils.Auto import RolePermission
 from BackEndAC.publics.Utils.mongodb_client import MongoDBClient
+from integracion.views import CloudinaryImageView
 from usuarios.models import Roles, Usuario, Perfil
 from usuarios.serializers import RolesSerializer, UsuarioSerializer, PerfilSerializer
 
@@ -183,60 +182,113 @@ class PerfilViewSet(viewsets.ModelViewSet):
 
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        file = request.FILES.get('file')  # El archivo de imagen
+        data = request.data  # Los demás datos (JSON)
+
+        # Valida y sube la imagen si existe
+        if file:
+            try:
+                upload_view = CloudinaryImageView()
+                cloudinary_response = upload_view.post(request).data
+
+                if cloudinary_response['estado']:
+                    # Agrega la URL de la imagen a los datos
+                    data['imagen_url'] = cloudinary_response['data']['secure_url']
+                else:
+                    return APIRespuesta(
+                        estado=False,
+                        mensaje="Error al subir la imagen.",
+                        data=cloudinary_response['mensaje'],
+                        codigoestado=status.HTTP_400_BAD_REQUEST
+                    ).to_response()
+            except Exception as e:
+                return APIRespuesta(
+                    estado=False,
+                    mensaje="Error al procesar la imagen.",
+                    data=str(e),
+                    codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
+                ).to_response()
+
+        # Procesar los datos del perfil
+        serializer = self.get_serializer(data=data)
 
         if serializer.is_valid():
             perfil = serializer.save()
-            headers = self.get_success_headers(serializer.data)
 
-            response = APIRespuesta(
+            return APIRespuesta(
                 estado=True,
                 mensaje="Perfil creado exitosamente.",
                 data=serializer.data,
                 codigoestado=status.HTTP_201_CREATED
-            )
-            return response.to_response()
-        response = APIRespuesta(
+            ).to_response()
+
+        return APIRespuesta(
             estado=False,
             mensaje="Error al crear el perfil.",
             data=serializer.errors,
             codigoestado=status.HTTP_400_BAD_REQUEST
-        )
-        return response.to_response()
+        ).to_response()
+
 
     def update(self, request, *args, **kwargs):
         try:
             # Obtener la instancia según el GUID de la URL
             instance = self.get_object()
         except Http404:
-            response = APIRespuesta(
+            return APIRespuesta(
                 estado=False,
                 mensaje="Perfil no encontrado.",
                 data=None,
                 codigoestado=status.HTTP_404_NOT_FOUND
-            )
-            return response.to_response()
+            ).to_response()
+
+        # Si existe un archivo, procesarlo antes de guardar
+        file = request.FILES.get('file')  # Usar 'file' para mantener consistencia con create
+        if file:
+            try:
+                # Subir imagen a Cloudinary usando la vista predefinida
+                upload_view = CloudinaryImageView()
+                upload_request = {
+                    "FILES": {"file": file},  # Simular la estructura de request para la vista
+                }
+                cloudinary_response = upload_view.post(upload_request)
+
+                if cloudinary_response.data['estado']:
+                    # Actualizar la URL de la imagen en el modelo
+                    instance.imagen_url = cloudinary_response.data['data']['secure_url']
+                else:
+                    return APIRespuesta(
+                        estado=False,
+                        mensaje="Error al subir la imagen.",
+                        data=cloudinary_response.data['mensaje'],
+                        codigoestado=status.HTTP_400_BAD_REQUEST
+                    ).to_response()
+            except Exception as e:
+                return APIRespuesta(
+                    estado=False,
+                    mensaje="Error al procesar la imagen.",
+                    data=str(e),
+                    codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
+                ).to_response()
 
         # Procesar los datos del request usando el serializer
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         if serializer.is_valid():
             perfil = serializer.save()
 
-            response = APIRespuesta(
+            return APIRespuesta(
                 estado=True,
                 mensaje="Perfil actualizado exitosamente.",
                 data=serializer.data,
                 codigoestado=status.HTTP_200_OK
-            )
-            return response.to_response()
+            ).to_response()
 
-        response = APIRespuesta(
+        return APIRespuesta(
             estado=False,
             mensaje="Error al actualizar el perfil.",
             data=serializer.errors,
             codigoestado=status.HTTP_400_BAD_REQUEST
-        )
-        return response.to_response()
+        ).to_response()
 
     def destroy(self, request, *args, **kwargs):
         """

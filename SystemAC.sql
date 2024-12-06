@@ -45,7 +45,8 @@ CREATE TABLE Perfiles (
     telefono VARCHAR(15), -- Teléfono del usuario
     direccion TEXT, -- Dirección del usuario
     carrera TEXT, -- Carrera del perfil si aplica
-    numero_control int -- numero control del perfil
+    numero_control int, -- numero control del perfil
+    imagen TEXT -- nombre de imagen
 );
 CREATE INDEX idx_perfiles_usuario_id ON Perfiles(usuario_id);
 CREATE INDEX inx_perfiles_numero_control ON Perfiles(numero_control);
@@ -188,7 +189,7 @@ CREATE TABLE Sistemas_Externos (
     guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Sistemas Externos
     nombre VARCHAR(100) NOT NULL, -- Nombre del sistema externo
     url VARCHAR(255) NOT NULL -- URL del sistema externo
-);      
+);
 CREATE INDEX idx_sistemas_externos_nombre ON Sistemas_Externos(nombre);
 
 -- Crear tabla de Reportes
