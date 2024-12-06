@@ -68,13 +68,9 @@ CREATE TABLE Actividades (
     id SERIAL PRIMARY KEY, -- Identificador único de la tabla Actividades
     guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Actividades
     nombre VARCHAR(100) NOT NULL, -- Nombre de la actividad
-    descripcion TEXT, -- Descripción de la actividad
-    fecha_inicio DATE NOT NULL, -- Fecha de inicio de la actividad
-    fecha_fin DATE NOT NULL, -- Fecha de fin de la actividad
-    capacidad INTEGER NOT NULL -- Capacidad de la actividad
+    descripcion TEXT -- Descripción de la actividad
 );
 CREATE INDEX idx_actividades_nombre ON Actividades(nombre);
-CREATE INDEX idx_actividades_fecha_inicio ON Actividades(fecha_inicio);
 
 -- Crear tabla de Asistencia
 DROP TABLE IF EXISTS Asistencia CASCADE;
@@ -90,18 +86,43 @@ CREATE INDEX idx_asistencia_usuario_id ON Asistencia(usuario_id);
 CREATE INDEX idx_asistencia_actividad_id ON Asistencia(actividad_id);
 CREATE INDEX idx_asistencia_fecha_registro ON Asistencia(fecha_registro);
 
+
+-- Crear tabla de Grupos
+DROP TABLE IF EXISTS Grupos CASCADE;
+CREATE TABLE Grupos (
+    id SERIAL PRIMARY KEY, -- Identificador único de la tabla Grupos
+    guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Grupos
+    descripcion TEXT NOT NULL, -- Descripción del grupo
+    ubicacion TEXT NOT NULL, -- Descripción del grupo
+    hora_inicial TIME NOT NULL, -- Hora inicial del grupo
+    hora_final TIME NOT NULL, -- Hora final del grupo
+    fecha_inicial DATE NOT NULL, -- Fecha inicial del grupo
+    fecha_final DATE NOT NULL, -- Fecha final del grupo
+    capacidad INTEGER NOT NULL, -- Capacidad de la actividad
+
+    usuario_id INTEGER REFERENCES Usuarios(id) ON DELETE CASCADE, -- Referencia al usuario
+    actividad_id INTEGER REFERENCES Actividades(id) ON DELETE CASCADE -- Referencia a la actividad
+);
+
+-- Índices para mejorar el rendimiento
+CREATE INDEX idx_grupos_usuario_id ON Grupos(usuario_id);
+CREATE INDEX idx_grupos_actividad_id ON Grupos(actividad_id);
+CREATE INDEX idx_grupos_fecha_inicial ON Grupos(fecha_inicial);
+CREATE INDEX idx_grupos_hora_inicial ON Grupos(hora_inicial);
+
+
 -- Crear tabla de Inscripciones
 DROP TABLE IF EXISTS Inscripciones CASCADE;
 CREATE TABLE Inscripciones (
     id SERIAL PRIMARY KEY, -- Identificador único de la tabla Inscripciones
     guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Inscripciones
     usuario_id INTEGER REFERENCES Usuarios(id) ON DELETE CASCADE, -- Referencia al usuario
-    actividad_id INTEGER REFERENCES Actividades(id) ON DELETE CASCADE, -- Referencia a la actividad
+    grupo_id INTEGER REFERENCES Grupos(id) ON DELETE CASCADE, -- Referencia a la actividad
     fecha_inscripcion TIMESTAMP NOT NULL, -- Fecha y hora de inscripción
     estado VARCHAR(10) CHECK (estado IN ('inscrito', 'en espera')) -- Estado de la inscripción (inscrito o en espera)
 );
 CREATE INDEX idx_inscripciones_usuario_id ON Inscripciones(usuario_id);
-CREATE INDEX idx_inscripciones_actividad_id ON Inscripciones(actividad_id);
+CREATE INDEX idx_inscripciones_grupo_id ON Inscripciones(grupo_id);
 CREATE INDEX idx_inscripciones_fecha_inscripcion ON Inscripciones(fecha_inscripcion);
 
 -- Crear tabla de Listas de Espera
@@ -188,7 +209,7 @@ CREATE TABLE Sistemas_Externos (
     guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Sistemas Externos
     nombre VARCHAR(100) NOT NULL, -- Nombre del sistema externo
     url VARCHAR(255) NOT NULL -- URL del sistema externo
-);      
+);
 CREATE INDEX idx_sistemas_externos_nombre ON Sistemas_Externos(nombre);
 
 -- Crear tabla de Reportes
