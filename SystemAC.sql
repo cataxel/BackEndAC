@@ -79,12 +79,12 @@ CREATE TABLE Asistencia (
     id SERIAL PRIMARY KEY, -- Identificador único de la tabla Asistencia
     guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Asistencia
     usuario_id INTEGER REFERENCES Usuarios(id) ON DELETE CASCADE, -- Referencia al usuario
-    actividad_id INTEGER REFERENCES Actividades(id) ON DELETE CASCADE, -- Referencia a la actividad
-    fecha_registro TIMESTAMP NOT NULL, -- Fecha y hora de registro de la asistencia
+    grupo_id INTEGER REFERENCES Grupos(id) ON DELETE CASCADE, -- Referencia a la actividad
+    fecha_registro DATE NOT NULL, -- Fecha de registro de la asistencia
     estado VARCHAR(10) CHECK (estado IN ('presente', 'ausente')) -- Estado de la asistencia (presente o ausente)
 );
 CREATE INDEX idx_asistencia_usuario_id ON Asistencia(usuario_id);
-CREATE INDEX idx_asistencia_actividad_id ON Asistencia(actividad_id);
+CREATE INDEX idx_asistencia_grupo_id ON Asistencia(grupo_id);
 CREATE INDEX idx_asistencia_fecha_registro ON Asistencia(fecha_registro);
 
 
@@ -145,12 +145,12 @@ CREATE TABLE Evaluaciones (
     id SERIAL PRIMARY KEY, -- Identificador único de la tabla Evaluaciones
     guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Evaluaciones
     usuario_id INTEGER REFERENCES Usuarios(id) ON DELETE CASCADE, -- Referencia al usuario
-    actividad_id INTEGER REFERENCES Actividades(id) ON DELETE CASCADE, -- Referencia a la actividad
+    grupo_id INTEGER REFERENCES Grupos(id) ON DELETE CASCADE, -- Referencia a la actividad
     calificacion DECIMAL(2, 1) CHECK (calificacion >= 0 AND calificacion <= 5), -- Calificación de la actividad
     comentarios TEXT -- Comentarios sobre la actividad
 );
 CREATE INDEX idx_evaluaciones_usuario_id ON Evaluaciones(usuario_id);
-CREATE INDEX idx_evaluaciones_actividad_id ON Evaluaciones(actividad_id);
+CREATE INDEX idx_evaluaciones_grupo_id ON Evaluaciones(grupo_id);
 CREATE INDEX idx_evaluaciones_calificacion ON Evaluaciones(calificacion);
 
 -- Crear tabla de Participaciones

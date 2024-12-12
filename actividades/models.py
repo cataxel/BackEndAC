@@ -84,7 +84,7 @@ class Grupo(models.Model):
         ordering = ['fecha_inicial']
         managed = False
         db_table = 'grupos'
-        app_label = 'grupos'
+        app_label = 'actividades'  # Esto le dice a Django que este modelo está en la app 'actividades'
 
     def __str__(self):
         return f'{self.descripcion} ({self.fecha_inicial} - {self.fecha_final})'
@@ -110,7 +110,7 @@ class Inscripcion(models.Model):
         'usuarios.Usuario', to_field='id', on_delete=models.CASCADE, db_column='usuario_id'
     )
     grupo = models.ForeignKey(
-        'grupos.Grupo', to_field='id', on_delete=models.CASCADE, db_column='grupo_id'
+        'actividades.Grupo', to_field='id', on_delete=models.CASCADE, db_column='grupo_id'
     )
     #fecha_inscripcion = models.DateField(auto_now_add=True)
     fecha_inscripcion = models.DateTimeField(auto_now_add=True)
