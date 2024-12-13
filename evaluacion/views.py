@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from BackEndAC.publics.Generics.Respuesta import APIRespuesta
 from actividades.models import Grupo, Inscripcion
 from actividades.serializers import InscripcionSerializer
-from evaluacion.models import Evaluacion, ListaEspera, Asistencia
+from evaluacion.models import Evaluacion, ListaEspera
 from evaluacion.serializers import EvaluacionSerializer, ListaEsperaSerializer
 
 
@@ -73,35 +73,101 @@ class ListaEsperaViewSet(viewsets.ModelViewSet):
             ).to_response()
 
 class EvaluacionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para manejar las evaluaciones.
+    """
     queryset = Evaluacion.objects.all()
     serializer_class = EvaluacionSerializer
-    lookup_field = 'guid'
+    lookup_field = 'guid'  # Utilizamos GUID como identificador en las rutas
 
     def create(self, request, *args, **kwargs):
-        # Usamos el serializador para validar los datos de la solicitud
+        """
+        Maneja la lógica para crear evaluaciones y estructura la respuesta con APIRespuesta.
+        """
         serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            try:
-                # Guardamos los datos si son válidos
-                serializer.save()
-                return APIRespuesta(
-                    estado=True,
-                    mensaje="Evaluación creada con éxito",
-                    data=serializer.data,
-                    codigoestado=status.HTTP_201_CREATED
-                ).to_response()
-            except ValidationError as e:
-                # Si ocurre una validación incorrecta, devolvemos el mensaje de error
-                return APIRespuesta(
-                    estado=False,
-                    mensaje=str(e),
-                    data=None,
-                    codigoestado=status.HTTP_400_BAD_REQUEST
-                ).to_response()
-        # Si el serializador no es válido, devolvemos los errores
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)  # Guarda la evaluación
+            return APIRespuesta(
+                estado=True,
+                mensaje="Evaluación creada exitosamente.",
+                data=serializer.data,  # Devolvemos la evaluación creada
+                codigoestado=status.HTTP_201_CREATED
+            ).to_response()
+        except ValidationError as e:
+            return APIRespuesta(
+                estado=False,
+                mensaje="Error al crear la evaluación.",
+                data={"errores": e.detail},  # Detalle del error
+                codigoestado=status.HTTP_400_BAD_REQUEST
+            ).to_response()
+
+    def update(self, request, *args, **kwargs):
+        """
+        Maneja la lógica para actualizar evaluaciones y estructura la respuesta con APIRespuesta.
+        """
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        try:
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)  # Actualiza la evaluación
+            return APIRespuesta(
+                estado=True,
+                mensaje="Evaluación actualizada exitosamente.",
+                data=serializer.data,  # Devolvemos la evaluación actualizada
+                codigoestado=status.HTTP_200_OK
+            ).to_response()
+        except ValidationError as e:
+            return APIRespuesta(
+                estado=False,
+                mensaje="Error al actualizar la evaluación.",
+                data={"errores": e.detail},  # Detalle del error
+                codigoestado=status.HTTP_400_BAD_REQUEST
+            ).to_response()
+
+    def destroy(self, request, *args, **kwargs):
+        """
+        Maneja la lógica para eliminar evaluaciones y estructura la respuesta con APIRespuesta.
+        """
+        instance = self.get_object()
+        try:
+            self.perform_destroy(instance)  # Elimina la evaluación
+            return APIRespuesta(
+                estado=True,
+                mensaje="Evaluación eliminada exitosamente.",
+                codigoestado=status.HTTP_204_NO_CONTENT
+            ).to_response()
+        except Exception as e:
+            return APIRespuesta(
+                estado=False,
+                mensaje="Error al eliminar la evaluación.",
+                data={"errores": str(e)},  # Detalle del error
+                codigoestado=status.HTTP_400_BAD_REQUEST
+            ).to_response()
+
+    def list(self, request, *args, **kwargs):
+        """
+        Recupera todas las evaluaciones y estructura la respuesta con APIRespuesta.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
         return APIRespuesta(
-            estado=False,
-            mensaje="Datos inválidos",
-            data=serializer.errors,
-            codigoestado=status.HTTP_400_BAD_REQUEST
+            estado=True,
+            mensaje="Lista de evaluaciones recuperada exitosamente.",
+            data=serializer.data,
+            codigoestado=status.HTTP_200_OK
+        ).to_response()
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Recupera una evaluación específica y estructura la respuesta con APIRespuesta.
+        """
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return APIRespuesta(
+            estado=True,
+            mensaje="Evaluación recuperada exitosamente.",
+            data=serializer.data,
+            codigoestado=status.HTTP_200_OK
         ).to_response()

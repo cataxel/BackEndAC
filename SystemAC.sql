@@ -147,6 +147,7 @@ CREATE TABLE Evaluaciones (
     usuario_id INTEGER REFERENCES Usuarios(id) ON DELETE CASCADE, -- Referencia al usuario
     grupo_id INTEGER REFERENCES Grupos(id) ON DELETE CASCADE, -- Referencia a la actividad
     calificacion DECIMAL(2, 1) CHECK (calificacion >= 0 AND calificacion <= 5), -- Calificación de la actividad
+    calificacion_final DECIMAL(2,1),
     comentarios TEXT -- Comentarios sobre la actividad
 );
 CREATE INDEX idx_evaluaciones_usuario_id ON Evaluaciones(usuario_id);
@@ -159,11 +160,12 @@ CREATE TABLE Participaciones (
     id SERIAL PRIMARY KEY, -- Identificador único de la tabla Participaciones
     guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Participaciones
     usuario_id INTEGER REFERENCES Usuarios(id) ON DELETE CASCADE, -- Referencia al usuario
-    actividad_id INTEGER REFERENCES Actividades(id) ON DELETE CASCADE, -- Referencia a la actividad
-    fecha_participacion TIMESTAMP NOT NULL -- Fecha y hora de participación
+    grupo_id INTEGER REFERENCES Grupos(id) ON DELETE CASCADE, -- Referencia a la actividad
+    fecha_participacion date NOT NULL, -- Fecha y hora de participación
+    puntos int not null
 );
 CREATE INDEX idx_participaciones_usuario_id ON Participaciones(usuario_id);
-CREATE INDEX idx_participaciones_actividad_id ON Participaciones(actividad_id);
+CREATE INDEX idx_participaciones_grupo_id ON Participaciones(grupo_id);
 CREATE INDEX idx_participaciones_fecha_participacion ON Participaciones(fecha_participacion);
 
 -- Crear tabla de Notificaciones

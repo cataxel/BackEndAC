@@ -1,15 +1,14 @@
 # Create your views here.
 from logging import fatal
 
-from rest_framework import generics, viewsets, status
+from rest_framework import generics, viewsets, status, serializers
 from rest_framework.exceptions import NotFound
 from rest_framework.fields import empty
 
 from BackEndAC.publics.Generics.Respuesta import APIRespuesta
-from usuarios.models import Usuario
-from .models import Actividad, Grupo, Inscripcion
-from .serializers import ActividadSerializer, GrupoSerializer, InscripcionSerializer
-
+from .models import Actividad, Grupo, Inscripcion, Participacion, Asistencia
+from .serializers import ActividadSerializer, GrupoSerializer, InscripcionSerializer, ParticipacionSerializer, \
+    AsistenciaSerializer
 
 
 class ActividadViewSet(viewsets.ModelViewSet):
@@ -518,3 +517,51 @@ class InscripcionViewSet(viewsets.ModelViewSet):
                 data=str(e),
                 codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
             ).to_response()
+
+class ParticipacionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para manejar las participaciones de usuarios en los grupos.
+    Soporta operaciones CRUD: listar, recuperar, crear, actualizar y eliminar participaciones.
+    """
+    serializer_class = ParticipacionSerializer
+    queryset = Participacion.objects.all()
+    lookup_field = 'guid'  # Utiliza `guid` como identificador para las operaciones.
+
+    def perform_create(self, serializer):
+        """
+        Personaliza la creación de una nueva participación, como generar un GUID o realizar validaciones adicionales.
+        """
+        usuario = serializer.validated_data.get('usuario')
+        print(usuario.rol)
+        if str(usuario.rol) != "Estudiante":  # Cambia 'rol' si el campo del modelo tiene otro nombre
+            raise serializers.ValidationError("La asistencia solo puede registrarse a usuarios con el rol de Estudiante.")
+        # Aquí puedes agregar lógica adicional antes de guardar
+        serializer.save()
+
+
+class AsistenciaViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para manejar la asistencia de usuarios en los grupos.
+    Soporta operaciones CRUD: listar, recuperar, crear, actualizar y eliminar asistencias.
+    """
+    serializer_class = AsistenciaSerializer
+    queryset = Asistencia.objects.all()
+    lookup_field = 'guid'  # Utiliza `guid` como identificador para las operaciones.
+
+    def perform_create(self, serializer):
+        """
+        Personaliza la creación de una nueva asistencia, incluyendo validaciones adicionales.
+        Por ejemplo: evitar entradas duplicadas en la misma fecha para un usuario y grupo.
+        """
+        fecha = serializer.validated_data.get('fecha_registro')
+        usuario = serializer.validated_data.get('usuario')
+        grupo = serializer.validated_data.get('grupo')
+
+        # Validación: Verificar si ya existe una asistencia para el mismo usuario, grupo y fecha
+        if Asistencia.objects.filter(usuario=usuario, grupo=grupo, fecha_registro=fecha).exists():
+            raise serializers.ValidationError("Ya existe un registro de asistencia para este usuario en esta fecha.")
+
+        if usuario.rol != "Estudiante":  # Cambia 'rol' si el campo del modelo tiene otro nombre
+            raise serializers.ValidationError("La asistencia solo puede registrarse a usuarios con el rol de Estudiante.")
+
+        serializer.save()

@@ -145,3 +145,74 @@ class Inscripcion(models.Model):
         return f'Inscripción {self.guid} ({self.estado})'
 
 
+class Participacion(models.Model):
+    """
+    Modelo que representa las participaciones de los usuarios en las actividades de un grupo.
+
+    Attributes:
+        guid (UUIDField): Identificador único de la participación.
+        usuario (ForeignKey): ID del usuario que participa.
+        grupo (ForeignKey): ID del grupo al que pertenece la participación.
+        fecha_participacion (DateTimeField): Fecha y hora de la participación.
+    """
+    guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    usuario = models.ForeignKey(
+        'usuarios.Usuario', to_field='id', on_delete=models.CASCADE, db_column='usuario_id'
+    )
+    grupo = models.ForeignKey(
+        'actividades.Grupo', to_field='id', on_delete=models.CASCADE, db_column='grupo_id'
+    )
+    fecha_participacion = models.DateField()
+    puntos = models.IntegerField()
+
+    class Meta:
+        verbose_name = 'Participación'
+        verbose_name_plural = 'Participaciones'
+        ordering = ['fecha_participacion']
+        managed = False
+        db_table = 'participaciones'
+        app_label = 'participaciones'
+
+    def __str__(self):
+        return f'Participación {self.guid} - Usuario {self.usuario_id}, Grupo {self.grupo_id}'
+
+class Asistencia(models.Model):
+    """
+    Modelo que representa la asistencia de los usuarios en las actividades de un grupo.
+
+    Attributes:
+        guid (UUIDField): Identificador único de la asistencia.
+        usuario (ForeignKey): ID del usuario relacionado con la asistencia.
+        grupo (ForeignKey): ID del grupo relacionado con la asistencia.
+        fecha_registro (DateField): Fecha en la que se registra la asistencia.
+        estado (CharField): Estado de la asistencia (presente o ausente).
+    """
+    ESTADO_CHOICES = [
+        ('presente', 'Presente'),
+        ('ausente', 'Ausente'),
+    ]
+
+    guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    usuario = models.ForeignKey(
+        'usuarios.Usuario', to_field='id', on_delete=models.CASCADE, db_column='usuario_id'
+    )
+    grupo = models.ForeignKey(
+        'actividades.Grupo', to_field='id', on_delete=models.CASCADE, db_column='grupo_id'
+    )
+    fecha_registro = models.DateField()
+    estado = models.CharField(
+        max_length=10,
+        choices=ESTADO_CHOICES,
+        default='ausente'
+    )
+
+    class Meta:
+        verbose_name = 'Asistencia'
+        verbose_name_plural = 'Asistencias'
+        ordering = ['fecha_registro']
+        managed = False
+        db_table = 'asistencia'
+        app_label = 'asistencias'
+
+    def __str__(self):
+        return f'Asistencia {self.guid} - Usuario {self.usuario_id}, Grupo {self.grupo_id}, Estado {self.estado}'

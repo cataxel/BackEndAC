@@ -1,7 +1,7 @@
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db import models
 import uuid
 
+from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework.exceptions import ValidationError
 
 
@@ -74,36 +74,33 @@ class ListaEspera(models.Model):
 
 class Evaluacion(models.Model):
     guid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    usuario = models.ForeignKey('usuarios.Usuario', on_delete=models.CASCADE)  # Asume que tienes un modelo Usuario
-    grupo = models.ForeignKey('actividades.Grupo', on_delete=models.CASCADE)  # Corregido a 'actividades.Grupo'
-    calificacion = models.DecimalField(max_digits=2, decimal_places=1)
-    comentarios = models.TextField(blank=True, null=True)
+    usuario = models.ForeignKey('usuarios.Usuario', on_delete=models.CASCADE)  # Relación con el modelo Usuario
+    grupo = models.ForeignKey('actividades.Grupo', on_delete=models.CASCADE)  # Relación con el modelo Grupo
+    calificacion = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(5)
+        ]  # Validaciones para respetar el rango 0 - 5
+    )
+    calificacion_final = models.DecimalField(
+        max_digits=2,
+        decimal_places=1,
+        blank=True,
+        null=True  # Campo opcional para calificación final
+    )
+    comentarios = models.TextField(blank=True, null=True)  # Comentarios opcionales
 
     class Meta:
         verbose_name = 'Evaluación'
         verbose_name_plural = 'Evaluaciones'
-        ordering = ['usuario']
-        managed = False
-        db_table = 'evaluaciones'
-        app_label = 'evaluacion'
+        ordering = ['usuario']  # Ordenar por usuario de forma predeterminada
+        managed = False  # Indica que la tabla ya fue creada manualmente
+        db_table = 'evaluaciones'  # Nombre de la tabla en la base de datos
+        app_label = 'evaluacion'  # Define el módulo de la aplicación para separar modelos
 
     def __str__(self):
-        return f"Evaluación para {self.usuario} en el grupo {self.grupo}"
+        return f"Evaluación de {self.usuario} en el grupo {self.grupo}"
 
-class Asistencia(models.Model):
-    guid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    usuario = models.ForeignKey('usuarios.Usuario', on_delete=models.CASCADE)  # Asume que tienes un modelo Usuario
-    grupo = models.ForeignKey('actividades.Grupo', on_delete=models.CASCADE)  # Corregido a 'actividades.Grupo'
-    fecha_registro = models.DateField()
-    estado = models.CharField(max_length=10, choices=[('presente', 'Presente'), ('ausente', 'Ausente')])
 
-    class Meta:
-        verbose_name = 'Asistencia'
-        verbose_name_plural = 'Asistencias'
-        ordering = ['fecha_registro']
-        managed = False
-        db_table = 'asistencias'
-        app_label = 'evaluacion'
-
-    def __str__(self):
-        return f"Asistencia de {self.usuario} al grupo {self.grupo} en {self.fecha_registro}"
