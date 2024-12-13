@@ -6,6 +6,7 @@ from rest_framework.exceptions import NotFound
 from rest_framework.fields import empty
 
 from BackEndAC.publics.Generics.Respuesta import APIRespuesta
+from usuarios.models import Usuario
 from .models import Actividad, Grupo, Inscripcion, Participacion, Asistencia
 from .serializers import ActividadSerializer, GrupoSerializer, InscripcionSerializer, ParticipacionSerializer, \
     AsistenciaSerializer
@@ -405,6 +406,11 @@ class InscripcionViewSet(viewsets.ModelViewSet):
                 codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
             ).to_response()
 
+    def validate_fecha(self, fecha_inscripcion, fecha_i_grupo):
+        if fecha_inscripcion > str(fecha_i_grupo):
+            return False
+        return True
+
     def create(self, request, *args, **kwargs):
         try:
             # Obtener los datos del request
@@ -414,14 +420,32 @@ class InscripcionViewSet(viewsets.ModelViewSet):
                 usuario = serializer.validated_data.get('usuario')
                 grupo = serializer.validated_data.get('grupo')
 
+                fecha_actual = datetime.now()
+                fechaActual_formateada = fecha_actual.strftime("%Y-%m-%d")
+
+                if not self.validate_fecha(fechaActual_formateada, grupo.fecha_inicial ):
+                    return APIRespuesta(
+                        estado=False,
+                        mensaje='No se puede inscribir a este grupo',
+                        codigoestado=status.HTTP_400_BAD_REQUEST
+                    ).to_response()
+
+                if grupo.capacidad < Grupo.objects.filter(guid=grupo.guid).count():
+                    return APIRespuesta(
+                        estado=False,
+                        mensaje='El grupo esta lleno',
+                        codigoestado=status.HTTP_400_BAD_REQUEST
+                    ).to_response()
+
                 # Verificar si ya existe una inscripción con los mismos datos
                 if Inscripcion.objects.filter(usuario=usuario, grupo=grupo).exists():
                     return APIRespuesta(
                         estado=False,
-                        mensaje='Ya existe una inscripción para este usuario en este evento',
-                        data={},
+                        mensaje='Ya existe una inscripción para este usuario en este grupo',
                         codigoestado=status.HTTP_400_BAD_REQUEST
                     ).to_response()
+
+
 
                 # Si no hay duplicados, guardar la inscripción
                 serializer.save()
@@ -460,6 +484,23 @@ class InscripcionViewSet(viewsets.ModelViewSet):
                 usuario = serializer.validated_data.get('usuario')
                 grupo = serializer.validated_data.get('grupo')
 
+                fecha_inscripcion = request.data.get('fecha_inscripcion', self.get_object().fecha_inscripcion)
+                fechaActual_formateada = fecha_inscripcion.strftime("%Y-%m-%d")
+
+                if grupo.capacidad < Grupo.objects.filter(guid=grupo.guid).count():
+                    return APIRespuesta(
+                        estado=False,
+                        mensaje='El grupo esta lleno',
+                        codigoestado=status.HTTP_400_BAD_REQUEST
+                    ).to_response()
+
+                if not self.validate_fecha(fechaActual_formateada, grupo.fecha_inicial ):
+                    return APIRespuesta(
+                        estado=False,
+                        mensaje='No se puede inscribir a este grupo',
+                        codigoestado=status.HTTP_400_BAD_REQUEST
+                    ).to_response()
+
                 # Verificar si ya existe otra inscripción con los mismos datos
                 if Inscripcion.objects.filter(
                         usuario=usuario,
@@ -467,8 +508,7 @@ class InscripcionViewSet(viewsets.ModelViewSet):
                 ).exclude(id=inscripcion.id).exists():
                     return APIRespuesta(
                         estado=False,
-                        mensaje='Ya existe otra inscripción para este usuario en este evento',
-                        data={},
+                        mensaje='Ya existe una inscripción para este usuario en este grupo',
                         codigoestado=status.HTTP_400_BAD_REQUEST
                     ).to_response()
 

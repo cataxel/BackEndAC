@@ -1,6 +1,6 @@
 from datetime import datetime
 from rest_framework import serializers
-from .models import Actividad, Grupo, Inscripcion
+from .models import Actividad, Grupo, Inscripcion, Participacion, Asistencia
 from usuarios.models import Usuario
 
 class ActividadSerializer(serializers.ModelSerializer):
