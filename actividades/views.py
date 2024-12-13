@@ -206,7 +206,7 @@ class GrupoViewSet(viewsets.ModelViewSet):
     def validate_user_role(self, user):
         # Validación de rol del usuario
         rol = str(user.rol)
-        return rol in ["Estudiante"] # Ajusta los roles según tu modelo
+        return rol in ["Docente"] # Ajusta los roles según tu modelo
 
     def validate_capacity(self, capacidad):
         # Validar que la capacidad no exceda el límite
@@ -601,7 +601,46 @@ class AsistenciaViewSet(viewsets.ModelViewSet):
         if Asistencia.objects.filter(usuario=usuario, grupo=grupo, fecha_registro=fecha).exists():
             raise serializers.ValidationError("Ya existe un registro de asistencia para este usuario en esta fecha.")
 
-        if usuario.rol != "Estudiante":  # Cambia 'rol' si el campo del modelo tiene otro nombre
+        if str(usuario.rol) != "Estudiante":  # Cambia 'rol' si el campo del modelo tiene otro nombre
             raise serializers.ValidationError("La asistencia solo puede registrarse a usuarios con el rol de Estudiante.")
 
         serializer.save()
+
+    def update(self, request, *args, **kwargs):
+        """
+        Actualiza solo el estado de una asistencia y previene cambios en otros campos.
+        """
+        # Permitir actualizaciones parciales
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+
+        # Verificar si el usuario pasó el campo estado y no otros.
+        estado = request.data.get('estado')
+        if not estado:
+            return APIRespuesta(
+                estado=False,
+                mensaje="Solo se permite actualizar el estado de la asistencia.",
+                codigoestado=status.HTTP_400_BAD_REQUEST
+            ).to_response()
+
+        # Crear un diccionario con solo el campo estado
+        data = {"estado": estado}
+
+        # Enviar `partial=True` al serializer
+        serializer = self.get_serializer(instance, data=data, partial=partial)
+
+        if serializer.is_valid():
+            serializer.save()
+            return APIRespuesta(
+                estado=True,
+                mensaje="Estado de la asistencia actualizado correctamente.",
+                data=serializer.data,
+                codigoestado=status.HTTP_200_OK
+            ).to_response()
+        else:
+            return APIRespuesta(
+                estado=False,
+                mensaje="Error al actualizar el estado de la asistencia.",
+                data=serializer.errors,
+                codigoestado=status.HTTP_400_BAD_REQUEST
+            ).to_response()
