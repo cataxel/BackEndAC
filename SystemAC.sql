@@ -132,11 +132,11 @@ CREATE TABLE Listas_Espera (
     id SERIAL PRIMARY KEY, -- Identificador único de la tabla Listas de Espera
     guid UUID UNIQUE NOT NULL, -- GUID único para la tabla Listas de Espera
     usuario_id INTEGER REFERENCES Usuarios(id) ON DELETE CASCADE, -- Referencia al usuario
-    actividad_id INTEGER REFERENCES Actividades(id) ON DELETE CASCADE, -- Referencia a la actividad
+    grupo_id INTEGER REFERENCES Grupos(id) ON DELETE CASCADE, -- Referencia a la grupo de una actividad
     fecha_registro TIMESTAMP NOT NULL -- Fecha y hora de registro en la lista de espera
 );
 CREATE INDEX idx_listas_espera_usuario_id ON Listas_Espera(usuario_id);
-CREATE INDEX idx_listas_espera_actividad_id ON Listas_Espera(actividad_id);
+CREATE INDEX idx_listas_espera_actividad_id ON Listas_Espera(grupo_id);
 CREATE INDEX idx_listas_espera_fecha_registro ON Listas_Espera(fecha_registro);
 
 -- Crear tabla de Evaluaciones

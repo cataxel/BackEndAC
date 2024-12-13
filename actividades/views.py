@@ -3,6 +3,7 @@ from rest_framework import generics, viewsets, status
 from rest_framework.exceptions import NotFound
 
 from BackEndAC.publics.Generics.Respuesta import APIRespuesta
+from evaluacion.models import ListaEspera
 from usuarios.models import Usuario
 from .models import Actividad, Grupo, Inscripcion
 from .serializers import ActividadSerializer, GrupoSerializer, InscripcionSerializer
@@ -232,6 +233,46 @@ class InscripcionViewSet(viewsets.ModelViewSet):
     serializer_class = InscripcionSerializer
     queryset = Inscripcion.objects.all()
     lookup_field = 'guid'
+
+    def aprobar_inscripcion(self, request, *args, **kwargs):
+        try:
+            # Obtener el usuario de la lista de espera
+            lista_espera_guid = request.data.get('lista_espera_guid')
+            lista_espera = ListaEspera.objects.get(guid=lista_espera_guid)
+
+            grupo = Grupo.objects.get(actividad=lista_espera.actividad)
+
+            # Verificar capacidad del grupo
+            if not grupo.tiene_espacio():
+                return APIRespuesta(
+                    estado=False,
+                    mensaje="El grupo está lleno, no se puede aprobar la inscripción.",
+                    codigoestado=status.HTTP_400_BAD_REQUEST
+                ).to_response()
+
+            # Aprobar inscripción
+            inscripcion = Inscripcion.objects.create(usuario=lista_espera.usuario, grupo=grupo)
+            lista_espera.delete()  # Eliminar de la lista de espera
+
+            return APIRespuesta(
+                estado=True,
+                mensaje="Usuario inscrito exitosamente.",
+                data=InscripcionSerializer(inscripcion).data,
+                codigoestado=status.HTTP_201_CREATED
+            ).to_response()
+        except ListaEspera.DoesNotExist:
+            return APIRespuesta(
+                estado=False,
+                mensaje="No se encontró el registro en la lista de espera.",
+                codigoestado=status.HTTP_404_NOT_FOUND
+            ).to_response()
+        except Exception as e:
+            return APIRespuesta(
+                estado=False,
+                mensaje="Error inesperado.",
+                data=str(e),
+                codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
+            ).to_response()
 
     def retrieve(self, request, *args, **kwargs):
         try:

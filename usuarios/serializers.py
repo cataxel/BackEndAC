@@ -98,7 +98,7 @@ class PerfilSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Perfil
-        fields = ['usuario','telefono','direccion','carrera','numero_control']
+        fields = ['usuario','telefono','direccion','carrera','numero_control',"imagen"]
 
     def create(self, validated_data):
         usuario_guid = validated_data.pop('usuario')
@@ -119,15 +119,16 @@ class PerfilSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         usuario_guid = validated_data.pop('usuario', None)
 
-        # Verificar si se proporciona un nuevo usuario y actualizarlo
+        # Verificar si se proporciona un nuevo usuario GUID distinto al actual
         if usuario_guid and instance.usuario.guid != usuario_guid:
             try:
                 usuario = Usuario.objects.get(guid=usuario_guid)
 
-                # Verificar que el nuevo usuario no tenga ya un perfil
-                if Perfil.objects.filter(usuario=usuario).exists():
+                # Si se está intentando cambiar el usuario, y este ya tiene un perfil, no permitirlo
+                if Perfil.objects.filter(usuario=usuario).exclude(id=instance.id).exists():
                     raise serializers.ValidationError("El nuevo usuario ya tiene un perfil asociado.")
 
+                # Actualizar el usuario
                 instance.usuario = usuario
             except Usuario.DoesNotExist:
                 raise serializers.ValidationError("Usuario no encontrado.")

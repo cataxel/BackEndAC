@@ -89,8 +89,16 @@ class Grupo(models.Model):
     def __str__(self):
         return f'{self.descripcion} ({self.fecha_inicial} - {self.fecha_final})'
 
+    def tiene_espacio(self):
+        """
+        Verifica si el grupo tiene espacio disponible para nuevas inscripciones.
+        Cuenta las inscripciones que tienen estado 'inscrito' para este grupo.
+        """
+        # Consulta en la tabla de Inscripcion para obtener el conteo de inscritos
+        inscripciones_count = Inscripcion.objects.filter(grupo=self, estado='inscrito').count()
 
-
+        # Compara el conteo con la capacidad del grupo
+        return inscripciones_count < self.capacidad
 
 
 class Inscripcion(models.Model):
@@ -105,6 +113,11 @@ class Inscripcion(models.Model):
         estado (CharField): Estado de la inscripción (por ejemplo, 'pendiente', 'confirmada').
     """
 
+    ESTADO_CHOICES = [
+        ('inscrito', 'Inscrito'),
+        ('en espera', 'En espera'),
+    ]
+
     guid = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     usuario = models.ForeignKey(
         'usuarios.Usuario', to_field='id', on_delete=models.CASCADE, db_column='usuario_id'
@@ -114,7 +127,11 @@ class Inscripcion(models.Model):
     )
     #fecha_inscripcion = models.DateField(auto_now_add=True)
     fecha_inscripcion = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20)
+    estado = models.CharField(
+        max_length=10,
+        choices=ESTADO_CHOICES,
+        default='en espera',
+    )
 
     class Meta:
         verbose_name = 'Inscripción'
@@ -125,6 +142,6 @@ class Inscripcion(models.Model):
         app_label = 'inscripciones'
 
     def __str__(self):
-        return f'Inscripción {self.guid}'
+        return f'Inscripción {self.guid} ({self.estado})'
 
 

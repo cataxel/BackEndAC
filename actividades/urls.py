@@ -10,5 +10,5 @@ router.register(r'inscripciones', InscripcionViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-
+    path('inscripciones/aprobar/', InscripcionViewSet.as_view({'post': 'aprobar_inscripcion'}), name='aprobar-inscripcion'),
 ]

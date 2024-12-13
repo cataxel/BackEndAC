@@ -29,7 +29,7 @@ class ListaEspera(models.Model):
         verbose_name_plural = 'Listas de Espera'
         managed = False  # Para que Django no cree o migre la tabla
         db_table = 'Listas_Espera'  # Nombre de la tabla en la base de datos
-        app_label = 'evaluaciones'  # Reemplazar con el nombre de tu aplicación
+        app_label = 'evaluaciones'  # Reemplazar con el nombre de tu    aplicación
 
     def __str__(self):
         return f'Lista de Espera para {self.usuario} en {self.actividad}'
@@ -84,7 +84,7 @@ class Evaluacion(models.Model):
         verbose_name_plural = 'Evaluaciones'
         ordering = ['usuario']
         managed = False
-        db_table = 'evaluaciones'  # Asegúrate de que el nombre de la tabla sea correcto
+        db_table = 'evaluaciones'
         app_label = 'evaluacion'
 
     def __str__(self):
@@ -102,7 +102,7 @@ class Asistencia(models.Model):
         verbose_name_plural = 'Asistencias'
         ordering = ['fecha_registro']
         managed = False
-        db_table = 'asistencias'  # Asegúrate de que el nombre de la tabla sea correcto
+        db_table = 'asistencias'
         app_label = 'evaluacion'
 
     def __str__(self):

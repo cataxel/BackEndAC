@@ -200,7 +200,7 @@ class Perfil(models.Model):
     direccion = models.TextField(blank=True, null=True)  # Dirección opcional
     carrera = models.TextField(blank=True, null=True)  # Carrera opcional
     numero_control = models.IntegerField(unique=True)  # Número de control único
-    imagen_url = models.URLField(max_length=500, blank=True, null=True)
+    imagen = models.URLField(max_length=500, blank=True, null=True)
 
     class Meta:
         indexes = [

@@ -180,34 +180,8 @@ class PerfilViewSet(viewsets.ModelViewSet):
             # Devuelve la respuesta en un formato apropiado
             return response.to_response()
 
-
     def create(self, request, *args, **kwargs):
-        file = request.FILES.get('file')  # El archivo de imagen
-        data = request.data  # Los demás datos (JSON)
-
-        # Valida y sube la imagen si existe
-        if file:
-            try:
-                upload_view = CloudinaryImageView()
-                cloudinary_response = upload_view.post(request).data
-
-                if cloudinary_response['estado']:
-                    # Agrega la URL de la imagen a los datos
-                    data['imagen_url'] = cloudinary_response['data']['secure_url']
-                else:
-                    return APIRespuesta(
-                        estado=False,
-                        mensaje="Error al subir la imagen.",
-                        data=cloudinary_response['mensaje'],
-                        codigoestado=status.HTTP_400_BAD_REQUEST
-                    ).to_response()
-            except Exception as e:
-                return APIRespuesta(
-                    estado=False,
-                    mensaje="Error al procesar la imagen.",
-                    data=str(e),
-                    codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
-                ).to_response()
+        data = request.data  # Los datos enviados en la solicitud
 
         # Procesar los datos del perfil
         serializer = self.get_serializer(data=data)
@@ -228,7 +202,6 @@ class PerfilViewSet(viewsets.ModelViewSet):
             data=serializer.errors,
             codigoestado=status.HTTP_400_BAD_REQUEST
         ).to_response()
-
 
     def update(self, request, *args, **kwargs):
         try:
