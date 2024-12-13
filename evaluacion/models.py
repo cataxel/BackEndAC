@@ -3,6 +3,10 @@ import uuid
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from rest_framework.exceptions import ValidationError
+from django.db import models
+import uuid
+from usuarios.models import Usuario
+from actividades.models import Grupo
 
 
 class ListaEspera(models.Model):
@@ -104,3 +108,22 @@ class Evaluacion(models.Model):
         return f"Evaluación de {self.usuario} en el grupo {self.grupo}"
 
 
+
+
+class Asistencia(models.Model):
+    guid = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    usuario = models.ForeignKey(Usuario, on_delete=models.CASCADE)
+    grupo = models.ForeignKey(Grupo, on_delete=models.CASCADE)
+    fecha_registro = models.DateField()
+    estado = models.CharField(max_length=10, choices=[('presente', 'Presente'), ('ausente', 'Ausente')])
+
+    class Meta:
+        verbose_name = 'Asistencia'
+        verbose_name_plural = 'Asistencias'
+        ordering = ['fecha_registro']
+        managed = False  # Indica que la tabla ya fue creada manualmente
+        db_table = 'asistencia'  # Nombre de la tabla en la base de datos
+        app_label = 'tu_aplicacion'  # Reemplaza 'tu_aplicacion' con el nombre de tu aplicación existente
+
+    def __str__(self):
+        return f"Asistencia de {self.usuario} en el grupo {self.grupo} el {self.fecha_registro}"
