@@ -165,20 +165,27 @@ class PerfilViewSet(viewsets.ModelViewSet):
     serializer_class = PerfilSerializer
     queryset = Perfil.objects.all()
 
-    def get_object(self):
-        guid = self.kwargs.get('pk')
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Sobrescribe el metodo retrieve para buscar un perfil por el GUID del usuario.
+        """
+        usuario_guid = kwargs.get('pk')  # Obtén el GUID del usuario desde la URL
         try:
-            # Búsqueda explícita por el campo 'guid'
-            return Perfil.objects.get(guid=guid)
+            perfil = Perfil.objects.get(usuario_guid=usuario_guid)  # Busca el perfil por usuario__guid
+            serializer = self.get_serializer(perfil)
+            return APIRespuesta(
+                estado=True,
+                mensaje="Perfil encontrado exitosamente.",
+                data=serializer.data,
+                codigoestado=status.HTTP_200_OK
+            ).to_response()
         except Perfil.DoesNotExist:
-            response = APIRespuesta(
+            return APIRespuesta(
                 estado=False,
-                mensaje="El perfil no existe.",
+                mensaje="No se encontró un perfil para el usuario especificado.",
                 data=None,
                 codigoestado=status.HTTP_404_NOT_FOUND
-            )
-            # Devuelve la respuesta en un formato apropiado
-            return response.to_response()
+            ).to_response()
 
     def create(self, request, *args, **kwargs):
         data = request.data  # Los datos enviados en la solicitud
