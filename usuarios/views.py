@@ -171,7 +171,7 @@ class PerfilViewSet(viewsets.ModelViewSet):
         """
         usuario_guid = kwargs.get('pk')  # Obtén el GUID del usuario desde la URL
         try:
-            perfil = Perfil.objects.get(usuario_guid=usuario_guid)  # Busca el perfil por usuario__guid
+            perfil = Perfil.objects.get(usuario__guid = usuario_guid)  # Busca el perfil por usuario__guid
             serializer = self.get_serializer(perfil)
             return APIRespuesta(
                 estado=True,
