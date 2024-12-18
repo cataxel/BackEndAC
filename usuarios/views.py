@@ -222,34 +222,12 @@ class PerfilViewSet(viewsets.ModelViewSet):
                 codigoestado=status.HTTP_404_NOT_FOUND
             ).to_response()
 
-        # Si existe un archivo, procesarlo antes de guardar
-        file = request.FILES.get('file')  # Usar 'file' para mantener consistencia con create
-        if file:
-            try:
-                # Subir imagen a Cloudinary usando la vista predefinida
-                upload_view = CloudinaryImageView()
-                upload_request = {
-                    "FILES": {"file": file},  # Simular la estructura de request para la vista
-                }
-                cloudinary_response = upload_view.post(upload_request)
+        # Obtener la URL de la imagen enviada en el request
+        imagen_url = request.data.get('imagen_url')
 
-                if cloudinary_response.data['estado']:
-                    # Actualizar la URL de la imagen en el modelo
-                    instance.imagen_url = cloudinary_response.data['data']['secure_url']
-                else:
-                    return APIRespuesta(
-                        estado=False,
-                        mensaje="Error al subir la imagen.",
-                        data=cloudinary_response.data['mensaje'],
-                        codigoestado=status.HTTP_400_BAD_REQUEST
-                    ).to_response()
-            except Exception as e:
-                return APIRespuesta(
-                    estado=False,
-                    mensaje="Error al procesar la imagen.",
-                    data=str(e),
-                    codigoestado=status.HTTP_500_INTERNAL_SERVER_ERROR
-                ).to_response()
+        # Si se envió una URL de la imagen, actualizarla en el modelo
+        if imagen_url:
+            instance.imagen_url = imagen_url
 
         # Procesar los datos del request usando el serializer
         serializer = self.get_serializer(instance, data=request.data, partial=True)
